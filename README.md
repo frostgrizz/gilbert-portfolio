@@ -27,15 +27,17 @@ gilbert-portfolio-v6/
 2. Buka `index.html` di browser untuk melihat versi dasar.
 3. Untuk pengalaman lokal yang lebih konsisten, jalankan server statis dari folder ini, misalnya dengan VS Code Live Server.
 
-## Deploy ke Vercel melalui GitHub
+## Upload melalui browser GitHub dan deploy ke Vercel
 
-1. Buat repository GitHub baru, misalnya `gilbert-portfolio`.
-2. Clone repository tersebut menggunakan GitHub Desktop.
-3. Salin seluruh isi folder ini ke folder repository lokal (pastikan `index.html` berada di root repository).
-4. Di GitHub Desktop, isi Summary misalnya `Build personal portfolio`, klik **Commit to main**, lalu **Push origin**.
-5. Login ke Vercel menggunakan GitHub, pilih **Add New → Project**, lalu import repository.
-6. Framework Preset: **Other**. Build Command: kosong. Output Directory: `.` (root). Klik **Deploy**.
-7. Setelah terhubung, setiap push baru ke branch utama akan memicu deployment baru.
+1. Ekstrak ZIP ini di komputer.
+2. Buka repository GitHub melalui browser.
+3. Pilih **Add file → Upload files**.
+4. Buka folder hasil ekstrak, pilih seluruh isi folder (`Ctrl + A`), lalu seret ke halaman upload. Jangan mengunggah ZIP sebagai satu file.
+5. Pastikan `index.html`, `styles.css`, `script.js`, `assets/`, dan `projects/` terlihat di root repository.
+6. Isi commit message, lalu pilih **Commit changes**.
+7. Di Vercel pilih **Add New → Project**, import repository, pilih Framework Preset **Other**, kosongkan Build Command, gunakan root sebagai Output Directory, lalu Deploy.
+8. Untuk domain dan SEO, ikuti `SEO-DOMAIN-GUIDE.md`.
+
 
 ## Bagian portofolio
 
@@ -74,3 +76,7 @@ Informasi profil disusun dari detail yang diberikan: siswa SMA Negeri 1 Klaten, 
 - Lanyard dragging now uses a temporary viewport clone; the original card remains anchored in its home slot, preventing disappearance after drag, pointer cancellation, or tab focus changes.
 - The About background uses the supplied SMA Negeri 1 Klaten facade photograph, softly blurred and faded into the paper surface.
 - The topographic contour motif is applied consistently to light, dark, and gradient sections throughout the page.
+
+## SEO dan domain
+
+Paket ini telah disiapkan untuk `https://gilbertevanarkananta.my.id/`. File `robots.txt`, `sitemap.xml`, Open Graph cover, canonical, metadata, dan JSON-LD sudah disertakan. Baca `SEO-DOMAIN-GUIDE.md` untuk pengaturan DNS IDwebhost, custom domain Vercel, serta verifikasi dan pengiriman sitemap melalui Google Search Console.
