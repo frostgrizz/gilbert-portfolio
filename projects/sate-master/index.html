@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sate Master 3D: Juragan Gerobak — Eksperimen Game oleh Gilbert Evan Arkananta</title>
+    <meta name="description" content="Sate Master 3D adalah eksperimen game simulasi gerobak sate berbasis browser oleh Gilbert Evan Arkananta, menggunakan JavaScript dan Three.js.">
+    <meta name="author" content="Gilbert Evan Arkananta">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://gilbertevanarkananta.my.id/projects/sate-master/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="id_ID">
+    <meta property="og:site_name" content="Gilbert Evan Arkananta">
+    <meta property="og:url" content="https://gilbertevanarkananta.my.id/projects/sate-master/">
+    <meta property="og:title" content="Sate Master 3D: Juragan Gerobak">
+    <meta property="og:description" content="Eksperimen game simulasi penjual sate 3D berbasis browser oleh Gilbert Evan Arkananta.">
+    <meta property="og:image" content="https://gilbertevanarkananta.my.id/assets/og-cover.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js r128 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #090d16;
+        }
+        #canvas-container {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* Glassmorphism HUD panels */
+        .hud-panel {
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(251, 191, 36, 0.25);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
+        }
+        .hud-btn {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hud-btn:active {
+            transform: scale(0.93);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(245, 158, 11, 0.6);
+            border-radius: 9999px;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.9); }
+            50% { opacity: 1; transform: translateY(-28px) scale(1.05); }
+            100% { opacity: 0; transform: translateY(-55px) scale(0.95); }
+        }
+        .floating-toast {
+            animation: floatUp 1.8s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 28px rgba(239, 68, 68, 0.85); }
+        }
+        .fan-active-glow {
+            animation: pulseGlow 1.2s infinite;
+        }
+    </style>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Sate Master 3D: Juragan Gerobak",
+      "url": "https://gilbertevanarkananta.my.id/projects/sate-master/",
+      "description": "Eksperimen game simulasi penjual sate 3D berbasis browser. Pemain mengelola gerobak, memanggang sate, melayani pelanggan, dan mengatur stok.",
+      "gamePlatform": "Web browser",
+      "genre": "Simulation",
+      "author": {
+        "@type": "Person",
+        "name": "Gilbert Evan Arkananta",
+        "url": "https://gilbertevanarkananta.my.id/"
+      },
+      "inLanguage": "id-ID"
+    }
+    </script>
+</head>
+<body class="text-slate-100 antialiased">
+
+    <!-- 3D WebGL Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Floating 3D Labels Container (Grill Slots & NPC Patience) -->
+    <div id="world-labels" class="fixed inset-0 pointer-events-none z-10 overflow-hidden"></div>
+
+    <!-- Floating Notifications Container -->
+    <div id="toast-container" class="fixed inset-0 pointer-events-none z-40 flex flex-col items-center justify-center"></div>
+
+    <!-- ==================== TOP HUD BAR ==================== -->
+    <header class="fixed top-0 left-0 right-0 z-20 p-2 sm:p-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        <!-- Left: Money, Reputation, Time -->
+        <div class="flex flex-wrap items-center gap-2 pointer-events-auto">
+            <!-- Saldo Rupiah -->
+            <div class="hud-panel px-3.5 py-2 rounded-2xl flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-money-bill-wave text-lg"></i>
+                </div>
+                <div>
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Saldo Kas</div>
+                    <div id="hud-money" class="text-sm sm:text-base font-extrabold text-emerald-400">Rp 150.000</div>
+                </div>
+            </div>
+
+            <!-- Jam & Hari -->
+            <div class="hud-panel px-3.5 py-2 rounded-2xl flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
+                    <i id="hud-time-icon" class="fa-solid fa-cloud-sun text-lg"></i>
+                </div>
+                <div>
+                    <div id="hud-day" class="text-[10px] uppercase tracking-wider text-amber-300 font-semibold">Hari 1 • Sore</div>
+                    <div id="hud-clock" class="text-sm sm:text-base font-extrabold text-white">17:00 WIB</div>
+                </div>
+            </div>
+
+            <!-- Rating Warung -->
+            <div class="hud-panel px-3.5 py-2 rounded-2xl flex items-center gap-2">
+                <div class="text-amber-400 text-lg"><i class="fa-solid fa-star"></i></div>
+                <div>
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Reputasi</div>
+                    <div class="text-sm sm:text-base font-extrabold text-amber-300"><span id="hud-rating">4.8</span> <span class="text-xs text-slate-400 font-normal">(<span id="hud-served">0</span> porsi)</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Suhu Bara Api Panggangan -->
+        <div class="hud-panel px-4 py-2 rounded-2xl flex items-center gap-3 pointer-events-auto min-w-[220px] sm:min-w-[270px]">
+            <div class="w-9 h-9 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center text-orange-400">
+                <i class="fa-solid fa-fire-flame-curved text-lg animate-pulse"></i>
+            </div>
+            <div class="flex-1">
+                <div class="flex justify-between items-center text-xs mb-1">
+                    <span class="font-bold text-orange-300 uppercase tracking-wider">Suhu Bara Arang</span>
+                    <span id="hud-temp-text" class="font-extrabold text-orange-400">68% (Ideal)</span>
+                </div>
+                <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 relative">
+                    <!-- Zona Ideal Marker -->
+                    <div class="absolute top-0 bottom-0 left-[55%] right-[12%] border-x border-dashed border-white/40 z-10" title="Zona Panas Ideal"></div>
+                    <div id="hud-temp-bar" class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 transition-all duration-150" style="width: 68%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Camera Presets, Audio & Shop Modal Button -->
+        <div class="flex items-center gap-1.5 pointer-events-auto">
+            <!-- Camera Preset Buttons -->
+            <div class="hud-panel p-1 rounded-2xl flex items-center gap-1">
+                <button onclick="setCameraPreset(1)" id="cam-btn-1" class="hud-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-slate-950" title="Kamera 1: Fokus Panggangan">
+                    <i class="fa-solid fa-fire mr-1"></i>1: Bakaran
+                </button>
+                <button onclick="setCameraPreset(2)" id="cam-btn-2" class="hud-btn px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800" title="Kamera 2: Fokus Racik & Pelanggan">
+                    <i class="fa-solid fa-bowl-rice mr-1"></i>2: Racik
+                </button>
+                <button onclick="setCameraPreset(3)" id="cam-btn-3" class="hud-btn px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800" title="Kamera 3: Full Gerobak & Jalanan">
+                    <i class="fa-solid fa-store mr-1"></i>3: Gerobak
+                </button>
+            </div>
+
+            <!-- Toko & Upgrade Button -->
+            <button onclick="toggleShopModal(true)" class="hud-panel hud-btn px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold text-amber-300 border-amber-400/50 hover:bg-amber-500/20 flex items-center gap-2">
+                <i class="fa-solid fa-cart-shopping text-amber-400"></i>
+                <span class="hidden md:inline">Stok & Upgrade</span>
+            </button>
+
+            <!-- Sound Mute Toggle -->
+            <button onclick="toggleAudio()" id="btn-audio" class="hud-panel hud-btn w-10 h-10 rounded-2xl flex items-center justify-center text-amber-400 hover:bg-slate-800" title="Suara On/Off">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ==================== LEFT PANEL: ACTIVE CUSTOMER ORDER ==================== -->
+    <aside class="fixed top-20 left-2 sm:left-3 z-20 w-72 sm:w-80 pointer-events-none flex flex-col gap-2">
+        <!-- Active Customer Order Card -->
+        <div id="order-card" class="hud-panel rounded-2xl p-3.5 pointer-events-auto transition-all duration-300">
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-2 mb-2.5">
+                <div class="flex items-center gap-2">
+                    <div id="npc-avatar-badge" class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300 font-bold text-sm">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <div id="npc-name" class="text-xs sm:text-sm font-extrabold text-white">Menunggu Pelanggan...</div>
+                        <div id="npc-queue-count" class="text-[11px] text-slate-400">Antrean: 0 orang</div>
+                    </div>
+                </div>
+                <span id="order-price-badge" class="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold text-xs border border-emerald-500/30">
+                    Rp 0
+                </span>
+            </div>
+
+            <!-- Order Requirements List -->
+            <div id="order-details-box" class="space-y-2 text-xs">
+                <div class="text-slate-400 italic py-2 text-center">
+                    Pelanggan sedang berjalan menuju gerobak sate Anda...
+                </div>
+            </div>
+
+            <!-- Patience Bar -->
+            <div id="patience-container" class="mt-3 hidden">
+                <div class="flex justify-between text-[11px] mb-1">
+                    <span class="text-slate-400 font-medium">Kesabaran Pelanggan</span>
+                    <span id="patience-text" class="font-bold text-emerald-400">100%</span>
+                </div>
+                <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div id="patience-bar" class="h-full bg-emerald-500 transition-all duration-200" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Serving Plate Preview Card -->
+        <div class="hud-panel rounded-2xl p-3 pointer-events-auto">
+            <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-utensils"></i> Piring Saji Saat Ini
+                </span>
+                <button onclick="clearPlate()" class="text-[11px] text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1" title="Buang isi piring">
+                    <i class="fa-solid fa-trash-can"></i> Kosongkan
+                </button>
+            </div>
+            <div id="plate-summary" class="text-xs text-slate-300 space-y-1 min-h-[44px] bg-slate-900/70 rounded-xl p-2 border border-slate-800">
+                <div class="text-slate-500 italic text-center py-1">Piring masih kosong. Angkat sate matang dari panggangan!</div>
+            </div>
+            <button onclick="servePlateToCustomer()" id="btn-serve-plate" class="hud-btn mt-2.5 w-full py-2 rounded-xl font-extrabold text-xs sm:text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 shadow-lg shadow-emerald-950/50 hover:brightness-110 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-bell-concierge"></i> SAJIKAN KE PELANGGAN
+            </button>
+        </div>
+    </aside>
+
+    <!-- ==================== RIGHT PANEL: QUICK HELP & STOCK PILLS ==================== -->
+    <aside class="fixed top-20 right-2 sm:right-3 z-20 pointer-events-none hidden lg:flex flex-col gap-2 w-60">
+        <div class="hud-panel rounded-2xl p-3 pointer-events-auto">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-amber-400 mb-2 flex items-center justify-between">
+                <span><i class="fa-solid fa-boxes-stacked mr-1"></i>Stok Gerobak</span>
+                <button onclick="toggleShopModal(true)" class="text-[11px] text-amber-300 underline">+ Beli</button>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5 text-xs">
+                <div class="bg-slate-900/80 px-2.5 py-1.5 rounded-xl border border-slate-800 flex justify-between">
+                    <span class="text-slate-400">Ayam:</span>
+                    <span id="stock-chicken" class="font-bold text-amber-300">20</span>
+                </div>
+                <div class="bg-slate-900/80 px-2.5 py-1.5 rounded-xl border border-slate-800 flex justify-between">
+                    <span class="text-slate-400">Kambing:</span>
+                    <span id="stock-mutton" class="font-bold text-rose-300">15</span>
+                </div>
+                <div class="bg-slate-900/80 px-2.5 py-1.5 rounded-xl border border-slate-800 flex justify-between">
+                    <span class="text-slate-400">Lontong:</span>
+                    <span id="stock-lontong" class="font-bold text-emerald-300">15</span>
+                </div>
+                <div class="bg-slate-900/80 px-2.5 py-1.5 rounded-xl border border-slate-800 flex justify-between">
+                    <span class="text-slate-400">Bumbu:</span>
+                    <span id="stock-spice" class="font-bold text-orange-300">25</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hud-panel rounded-2xl p-3 pointer-events-auto text-[11px] text-slate-300 space-y-1.5 leading-relaxed">
+            <div class="font-extrabold text-amber-400 uppercase tracking-wider text-xs"><i class="fa-solid fa-circle-info mr-1"></i>Tips Juragan</div>
+            <p>1. Taruh <b>Sate Ayam/Kambing</b> ke atas panggangan arang.</p>
+            <p>2. Tekan/tahan <b>Kipas Bara</b> (atau tombol <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-amber-300">Spasi</kbd>) agar arang menyala merah & suhu ideal.</p>
+            <p>3. Klik <b>Balik (Flip)</b> pada sate agar <b>Sisi A & Sisi B</b> matang merata (80%-125%) dan tidak gosong!</p>
+            <p>4. Angkat ke piring, beri <b>Bumbu/Lontong</b> sesuai pesanan, lalu klik <b>Sajikan</b>.</p>
+        </div>
+    </aside>
+
+    <!-- ==================== BOTTOM CONTROL DOCK: COOKING & RACIK ==================== -->
+    <footer class="fixed bottom-0 left-0 right-0 z-20 p-2 sm:p-3 pointer-events-none flex flex-col items-center gap-2">
+        <!-- Main Interactive Action Bar -->
+        <div class="hud-panel rounded-3xl p-2 sm:p-2.5 pointer-events-auto flex flex-wrap items-center justify-center gap-2 max-w-5xl w-full shadow-2xl">
+            
+            <!-- STEP 1: Taruh Sate Mentah ke Panggangan -->
+            <div class="flex items-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800">
+                <button onclick="placeSatayOnGrill('ayam')" class="hud-btn px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 flex items-center gap-2 text-left">
+                    <span class="text-xl">🍢</span>
+                    <div>
+                        <div class="text-xs font-extrabold text-amber-300">+ Sate Ayam</div>
+                        <div class="text-[10px] text-slate-400">5 Tusuk (1 Porsi)</div>
+                    </div>
+                </button>
+                <button onclick="placeSatayOnGrill('kambing')" class="hud-btn px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 flex items-center gap-2 text-left">
+                    <span class="text-xl">🥩</span>
+                    <div>
+                        <div class="text-xs font-extrabold text-rose-300">+ Sate Kambing</div>
+                        <div class="text-[10px] text-slate-400">5 Tusuk (1 Porsi)</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- STEP 2: Kontrol Panggangan & Kipas Bambu -->
+            <div class="flex items-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800">
+                <button id="btn-fan-hold"
+                    onmousedown="startFanning()" onmouseup="stopFanning()" onmouseleave="stopFanning()"
+                    ontouchstart="startFanning(event)" ontouchend="stopFanning()"
+                    class="hud-btn fan-active-glow px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-fan text-base"></i>
+                    <div class="text-left">
+                        <div>KIPAS BARA</div>
+                        <div class="text-[10px] font-normal text-orange-100">Tahan Klik / Spasi</div>
+                    </div>
+                </button>
+
+                <button onclick="flipAllSatay()" class="hud-btn px-3 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-300 font-bold text-xs flex items-center gap-1.5" title="Balik semua sate di panggangan">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Balik Semua</span>
+                </button>
+
+                <button onclick="plateAllCookedSatay()" class="hud-btn px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 font-bold text-xs flex items-center gap-1.5" title="Angkat semua sate yang sudah matang ke piring">
+                    <i class="fa-solid fa-share-from-square"></i>
+                    <span>Angkat Matang</span>
+                </button>
+            </div>
+
+            <!-- STEP 3: Racik Topping & Bumbu Piring -->
+            <div class="flex flex-wrap items-center gap-1 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800">
+                <span class="text-[10px] uppercase font-bold text-slate-400 px-1.5 hidden xl:inline">Racik Piring:</span>
+                
+                <button onclick="addToppingToPlate('lontong')" id="top-btn-lontong" class="hud-btn px-2.5 py-1.5 rounded-xl bg-emerald-950/90 hover:bg-emerald-900 border border-emerald-600/40 text-emerald-300 text-xs font-bold flex items-center gap-1">
+                    <span>🍃</span> Lontong
+                </button>
+                <button onclick="addToppingToPlate('kacang')" id="top-btn-kacang" class="hud-btn px-2.5 py-1.5 rounded-xl bg-amber-950/90 hover:bg-amber-900 border border-amber-600/40 text-amber-300 text-xs font-bold flex items-center gap-1">
+                    <span>🥜</span> Bumbu Kacang
+                </button>
+                <button onclick="addToppingToPlate('kecap')" id="top-btn-kecap" class="hud-btn px-2.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-600/50 text-stone-200 text-xs font-bold flex items-center gap-1">
+                    <span>🫗</span> Kecap Manis
+                </button>
+                <button onclick="addToppingToPlate('sambal')" id="top-btn-sambal" class="hud-btn px-2.5 py-1.5 rounded-xl bg-red-950/90 hover:bg-red-900 border border-red-600/40 text-red-300 text-xs font-bold flex items-center gap-1">
+                    <span>🌶️</span> Sambal
+                </button>
+                <button onclick="addToppingToPlate('bawang')" id="top-btn-bawang" class="hud-btn px-2.5 py-1.5 rounded-xl bg-purple-950/90 hover:bg-purple-900 border border-purple-500/40 text-purple-300 text-xs font-bold flex items-center gap-1">
+                    <span>🧅</span> Bawang
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== MODAL TOKO STOK & UPGRADE GEROBAK ==================== -->
+    <div id="shop-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="hud-panel rounded-3xl max-w-3xl w-full max-h-[88vh] flex flex-col overflow-hidden border border-amber-400/40">
+            <!-- Header -->
+            <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 text-xl">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-extrabold text-white">Pasar Induk & Upgrade Gerobak</h2>
+                        <p class="text-xs text-slate-400">Belanja stok bahan segar dan tingkatkan peralatan gerobak sate Anda</p>
+                    </div>
+                </div>
+                <button onclick="toggleShopModal(false)" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-6">
+                <!-- Section 1: Belanja Stok Bahan -->
+                <div>
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-box-open"></i> Belanja Stok Bahan Mentah
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-sm text-amber-300">🍢 10 Porsi Sate Ayam</div>
+                                <div class="text-xs text-slate-400">Stok saat ini: <span id="modal-stock-chicken" class="text-white font-bold">20</span></div>
+                            </div>
+                            <button onclick="buyStock('chicken', 10, 35000)" class="hud-btn px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
+                                Beli Rp 35.000
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-sm text-rose-300">🥩 10 Porsi Sate Kambing</div>
+                                <div class="text-xs text-slate-400">Stok saat ini: <span id="modal-stock-mutton" class="text-white font-bold">15</span></div>
+                            </div>
+                            <button onclick="buyStock('mutton', 10, 50000)" class="hud-btn px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
+                                Beli Rp 50.000
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-sm text-emerald-300">🍃 15 Potong Lontong Daun</div>
+                                <div class="text-xs text-slate-400">Stok saat ini: <span id="modal-stock-lontong" class="text-white font-bold">15</span></div>
+                            </div>
+                            <button onclick="buyStock('lontong', 15, 20000)" class="hud-btn px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
+                                Beli Rp 20.000
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-sm text-orange-300">🥜 Paket Bumbu Kacang & Arang</div>
+                                <div class="text-xs text-slate-400">Stok saat ini: <span id="modal-stock-spice" class="text-white font-bold">25</span></div>
+                            </div>
+                            <button onclick="buyStock('spice', 20, 25000)" class="hud-btn px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
+                                Beli Rp 25.000
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Upgrade Peralatan Gerobak 3D -->
+                <div>
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> Upgrade Peralatan Gerobak (Tampil di 3D)
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Upgrade 1: Kipas Angin Elektrik -->
+                        <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 flex flex-col justify-between gap-3">
+                            <div>
+                                <div class="font-bold text-sm text-sky-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-fan"></i> Kipas Angin Elektrik Otomatis
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">Memasang kipas elektrik 3D di ujung panggangan yang menjaga suhu arang tetap menyala ideal secara otomatis!</p>
+                            </div>
+                            <button id="upg-btn-fan" onclick="buyUpgrade('electricFan', 120000)" class="hud-btn w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs">
+                                Beli Upgrade • Rp 120.000
+                            </button>
+                        </div>
+
+                        <!-- Upgrade 2: Panggangan Jumbo -->
+                        <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 flex flex-col justify-between gap-3">
+                            <div>
+                                <div class="font-bold text-sm text-orange-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-fire-burner"></i> Panggangan Arang Jumbo (8 Slot)
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">Memperluas kapasitas panggangan dari 5 porsi menjadi 8 porsi sekaligus untuk melayani pesanan ramai.</p>
+                            </div>
+                            <button id="upg-btn-grill" onclick="buyUpgrade('jumboGrill', 150000)" class="hud-btn w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs">
+                                Beli Upgrade • Rp 150.000
+                            </button>
+                        </div>
+
+                        <!-- Upgrade 3: Lampu Neon Gerobak -->
+                        <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 flex flex-col justify-between gap-3">
+                            <div>
+                                <div class="font-bold text-sm text-fuchsia-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-lightbulb"></i> Plang Lampu Neon Gerobak
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">Memasang plang neon warna-warni di atap gerobak. Pelanggan datang lebih cepat & kesabaran +30%!</p>
+                            </div>
+                            <button id="upg-btn-neon" onclick="buyUpgrade('neonSign', 100000)" class="hud-btn w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs">
+                                Beli Upgrade • Rp 100.000
+                            </button>
+                        </div>
+
+                        <!-- Upgrade 4: Bumbu Rahasia Madura -->
+                        <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 flex flex-col justify-between gap-3">
+                            <div>
+                                <div class="font-bold text-sm text-emerald-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-award"></i> Resep Bumbu Kacang Warisan
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">Kacang tanah sangrai pilihan dengan aroma jeruk limau. Harga jual & uang tip pelanggan naik +40%!</p>
+                            </div>
+                            <button id="upg-btn-recipe" onclick="buyUpgrade('secretRecipe', 180000)" class="hud-btn w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs">
+                                Beli Upgrade • Rp 180.000
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== START SCREEN OVERLAY ==================== -->
+    <div id="start-overlay" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="hud-panel rounded-3xl max-w-lg w-full p-6 sm:p-8 text-center border border-amber-400/50 shadow-2xl">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-amber-500 to-red-600 flex items-center justify-center text-4xl shadow-lg shadow-orange-600/40">
+                🍢
+            </div>
+            <div class="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold uppercase tracking-widest mb-2">
+                Indonesian Street Food Simulator 3D
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                SATE MASTER 3D
+            </h1>
+            <p class="text-amber-400 font-bold text-sm mb-4">Juragan Gerobak Malam</p>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6">
+                Rasakan sensasi membakar sate di pinggir jalan raya malam Indonesia! Kipasi bara arang hingga menyala merah, balik tusukan sate agar kedua sisi matang karamel sempurna, racik bumbu kacang & kecap manis, lalu layani pelanggan sebelum kehabisan kesabaran.
+            </p>
+            <div class="grid grid-cols-3 gap-2 text-left text-[11px] bg-slate-900/90 p-3 rounded-2xl border border-slate-800 mb-6">
+                <div>
+                    <div class="font-bold text-amber-400 mb-0.5"><i class="fa-solid fa-fire mr-1"></i>Bara & Asap</div>
+                    <div class="text-slate-400">Kipasi arang agar suhu 65-95% & kepulan asap makin harum.</div>
+                </div>
+                <div>
+                    <div class="font-bold text-sky-400 mb-0.5"><i class="fa-solid fa-rotate mr-1"></i>2 Sisi Sate</div>
+                    <div class="text-slate-400">Wajib balik sate (Sisi A & B) agar matang merata & tidak gosong.</div>
+                </div>
+                <div>
+                    <div class="font-bold text-emerald-400 mb-0.5"><i class="fa-solid fa-volume-high mr-1"></i>Audio 3D</div>
+                    <div class="text-slate-400">Suara desisan lemak sate, kipas bambu, & suasana malam.</div>
+                </div>
+            </div>
+            <button onclick="startGame()" class="hud-btn w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 text-slate-950 font-extrabold text-base shadow-xl shadow-orange-600/30 hover:brightness-110 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play"></i> MULAI JUALAN SEKARANG
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /********************************************************************
+         * 1. PROCEDURAL WEB AUDIO SYNTHESIZER (NO EXTERNAL ASSETS NEEDED)
+         ********************************************************************/
+        class SatayAudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+                this.sizzleGain = null;
+                this.sizzleFilter = null;
+                this.cricketTimer = null;
+            }
+
+            init() {
+                if (this.ctx) return;
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioCtx();
+
+                // Create continuous white/pink noise buffer for charcoal & fat sizzling
+                const bufferSize = this.ctx.sampleRate * 3;
+                const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    // Mix white noise with occasional crackle spikes
+                    const spike = Math.random() > 0.992 ? (Math.random() * 2 - 1) * 3.0 : 0;
+                    output[i] = (Math.random() * 2 - 1) * 0.35 + spike;
+                }
+
+                const whiteNoise = this.ctx.createBufferSource();
+                whiteNoise.buffer = noiseBuffer;
+                whiteNoise.loop = true;
+
+                this.sizzleFilter = this.ctx.createBiquadFilter();
+                this.sizzleFilter.type = 'bandpass';
+                this.sizzleFilter.frequency.value = 3200;
+                this.sizzleFilter.Q.value = 1.4;
+
+                this.sizzleGain = this.ctx.createGain();
+                this.sizzleGain.gain.value = 0.001;
+
+                whiteNoise.connect(this.sizzleFilter);
+                this.sizzleFilter.connect(this.sizzleGain);
+                this.sizzleGain.connect(this.ctx.destination);
+                whiteNoise.start(0);
+
+                // Night crickets & distant vehicle ambience loop
+                this.startNightAmbience();
+            }
+
+            updateSizzle(activeSatayCount, grillTemp, isFanning) {
+                if (!this.ctx || !this.enabled) return;
+                const targetGain = activeSatayCount > 0
+                    ? Math.min(0.28, (activeSatayCount * 0.032) * (grillTemp / 75) * (isFanning ? 1.55 : 1.0))
+                    : 0.002;
+                this.sizzleGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.1);
+                const targetFreq = 2400 + (grillTemp * 22) + (isFanning ? 700 : 0);
+                this.sizzleFilter.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.12);
+            }
+
+            playFanWhoosh() {
+                if (!this.ctx || !this.enabled) return;
+                const now = this.ctx.currentTime;
+                const bufferSize = this.ctx.sampleRate * 0.22;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(180, now);
+                filter.frequency.exponentialRampToValueAtTime(520, now + 0.1);
+                filter.frequency.exponentialRampToValueAtTime(140, now + 0.22);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start(now);
+            }
+
+            playPop(freq = 420) {
+                if (!this.ctx || !this.enabled) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now);
+                osc.frequency.exponentialRampToValueAtTime(freq * 1.45, now + 0.09);
+                gain.gain.setValueAtTime(0.14, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+
+            playCashRegister() {
+                if (!this.ctx || !this.enabled) return;
+                const now = this.ctx.currentTime;
+                const notes = [1046.5, 1318.5, 1567.98, 2093.0];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                    gain.gain.setValueAtTime(0.14, now + idx * 0.06);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.06);
+                    osc.stop(now + idx * 0.06 + 0.36);
+                });
+            }
+
+            playError() {
+                if (!this.ctx || !this.enabled) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(190, now);
+                osc.frequency.linearRampToValueAtTime(130, now + 0.22);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+
+            startNightAmbience() {
+                if (this.cricketTimer) clearInterval(this.cricketTimer);
+                this.cricketTimer = setInterval(() => {
+                    if (!this.ctx || !this.enabled) return;
+                    // Subtle cricket chirp at night
+                    if (Math.random() < 0.65) {
+                        const now = this.ctx.currentTime;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(4450 + Math.random() * 180, now);
+                        gain.gain.setValueAtTime(0.012, now);
+                        gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.065);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.07);
+                    }
+                }, 420);
+            }
+        }
+
+        const audio = new SatayAudioEngine();
+
+        function toggleAudio() {
+            audio.enabled = !audio.enabled;
+            const btn = document.getElementById('btn-audio');
+            if (audio.enabled) {
+                btn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+                btn.classList.replace('text-slate-500', 'text-amber-400');
+            } else {
+                if (audio.sizzleGain && audio.ctx) {
+                    audio.sizzleGain.gain.setTargetAtTime(0.0001, audio.ctx.currentTime, 0.05);
+                }
+                btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+                btn.classList.replace('text-amber-400', 'text-slate-500');
+            }
+        }
+
+        /********************************************************************
+         * 2. GAME STATE & CONFIGURATION
+         ********************************************************************/
+        const state = {
+            started: false,
+            money: 150000,
+            day: 1,
+            timeMinutes: 17 * 60, // Starts at 17:00 (5:00 PM Golden Hour)
+            rating: 4.8,
+            servedCount: 0,
+            grillTemp: 68, // 0 to 100
+            isFanning: false,
+            fanSwingPhase: 0,
+            maxGrillSlots: 5, // Upgrades to 8 with Panggangan Jumbo
+            stock: {
+                chicken: 20,
+                mutton: 15,
+                lontong: 15,
+                spice: 25
+            },
+            upgrades: {
+                electricFan: false,
+                jumboGrill: false,
+                neonSign: false,
+                secretRecipe: false
+            },
+            // Plate currently being assembled
+            plate: {
+                chickenPortions: [], // Array of cookScores
+                muttonPortions: [],
+                lontong: false,
+                kacang: false,
+                kecap: false,
+                sambal: false,
+                bawang: false
+            },
+            grillSlots: [], // Initialized with 3D positions
+            customers: [],
+            spawnCooldown: 2.0
+        };
+
+        /********************************************************************
+         * 3. THREE.JS SCENE, PBR MATERIALS & PROCEDURAL TEXTURES
+         ********************************************************************/
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1e1b2e);
+        scene.fog = new THREE.FogExp2(0x161426, 0.022);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 150);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+        container.appendChild(renderer.domElement);
+
+        // Camera Orbit / Target interpolation system
+        const camControl = {
+            currentPos: new THREE.Vector3(0.75, 2.25, 2.55),
+            currentLook: new THREE.Vector3(0.45, 1.18, 0.0),
+            targetPos: new THREE.Vector3(0.75, 2.25, 2.55),
+            targetLook: new THREE.Vector3(0.45, 1.18, 0.0),
+            isDragging: false,
+            prevMouse: { x: 0, y: 0 },
+            orbitOffset: new THREE.Vector3(0, 0, 0)
+        };
+
+        function setCameraPreset(preset) {
+            camControl.orbitOffset.set(0, 0, 0);
+            [1, 2, 3].forEach(id => {
+                const btn = document.getElementById(`cam-btn-${id}`);
+                if (id === preset) {
+                    btn.className = 'hud-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-slate-950';
+                } else {
+                    btn.className = 'hud-btn px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800';
+                }
+            });
+
+            if (preset === 1) {
+                // Fokus Bakaran Arang
+                camControl.targetPos.set(0.68, 2.18, 2.15);
+                camControl.targetLook.set(0.55, 1.15, 0.05);
+            } else if (preset === 2) {
+                // Fokus Piring Racik & Pelanggan
+                camControl.targetPos.set(-0.15, 2.25, 2.65);
+                camControl.targetLook.set(-0.1, 1.25, -0.45);
+            } else {
+                // Full Gerobak & Jalanan Malam
+                camControl.targetPos.set(0.0, 2.85, 4.8);
+                camControl.targetLook.set(0.0, 1.35, -0.5);
+            }
+        }
+
+        // Procedural Canvas Textures Generator
+        function createWoodTexture() {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#6e4726';
+            ctx.fillRect(0, 0, 256, 256);
+            for (let i = 0; i < 180; i++) {
+                ctx.fillStyle = i % 2 === 0 ? 'rgba(45, 25, 10, 0.18)' : 'rgba(145, 95, 48, 0.15)';
+                ctx.fillRect(0, Math.random() * 256, 256, 2 + Math.random() * 5);
+            }
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+            return tex;
+        }
+
+        function createAsphaltTexture() {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#181b22';
+            ctx.fillRect(0, 0, 256, 256);
+            for (let i = 0; i < 4000; i++) {
+                const v = 20 + Math.floor(Math.random() * 30);
+                ctx.fillStyle = `rgb(${v},${v},${v + 5})`;
+                ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+            }
+            // Wet puddle dark glossy patches
+            ctx.fillStyle = 'rgba(8, 10, 15, 0.45)';
+            for (let i = 0; i < 8; i++) {
+                ctx.beginPath();
+                ctx.ellipse(Math.random() * 256, Math.random() * 256, 30, 18, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(12, 6);
+            return tex;
+        }
+
+        function createSidewalkTexture() {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#393e46';
+            ctx.fillRect(0, 0, 256, 256);
+            ctx.strokeStyle = '#22262b';
+            ctx.lineWidth = 4;
+            for (let x = 0; x <= 256; x += 64) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 256); ctx.stroke();
+            }
+            for (let y = 0; y <= 256; y += 64) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(256, y); ctx.stroke();
+            }
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(10, 3);
+            return tex;
+        }
+
+        function createGlowSpriteTexture() {
+            const c = document.createElement('canvas');
+            c.width = 128; c.height = 128;
+            const ctx = c.getContext('2d');
+            const grad = ctx.createRadialGradient(64, 64, 4, 64, 64, 60);
+            grad.addColorStop(0, 'rgba(255, 230, 150, 1)');
+            grad.addColorStop(0.35, 'rgba(255, 175, 60, 0.55)');
+            grad.addColorStop(1, 'rgba(255, 140, 0, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 128, 128);
+            return new THREE.CanvasTexture(c);
+        }
+
+        const woodTex = createWoodTexture();
+        const asphaltTex = createAsphaltTexture();
+        const sidewalkTex = createSidewalkTexture();
+        const glowTex = createGlowSpriteTexture();
+
+        /********************************************************************
+         * 4. LIGHTING SYSTEM (GOLDEN HOUR TO NIGHT + WARM CART BULB)
+         ********************************************************************/
+        const ambientLight = new THREE.AmbientLight(0xffb88c, 0.55);
+        scene.add(ambientLight);
+
+        const sunLight = new THREE.DirectionalLight(0xff9e5e, 0.9);
+        sunLight.position.set(-12, 14, -8);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 1024;
+        sunLight.shadow.mapSize.height = 1024;
+        scene.add(sunLight);
+
+        // Warm Hanging Bulb inside the Gerobak Sate
+        const cartBulbLight = new THREE.PointLight(0xffaa33, 2.2, 8.5, 1.6);
+        cartBulbLight.position.set(0.0, 2.12, 0.0);
+        cartBulbLight.castShadow = true;
+        cartBulbLight.shadow.bias = -0.002;
+        scene.add(cartBulbLight);
+
+        // Volumetric Glow Halo Sprite on the Hanging Bulb
+        const bulbHaloMat = new THREE.SpriteMaterial({
+            map: glowTex,
+            color: 0xffb84d,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const bulbHaloSprite = new THREE.Sprite(bulbHaloMat);
+        bulbHaloSprite.scale.set(0.85, 0.85, 1);
+        bulbHaloSprite.position.copy(cartBulbLight.position);
+        scene.add(bulbHaloSprite);
+
+        // Glowing Charcoal Light right above the grill
+        const charcoalLight = new THREE.PointLight(0xff4500, 1.4, 3.0);
+        charcoalLight.position.set(0.68, 1.32, 0.05);
+        scene.add(charcoalLight);
+
+        // Streetlamp Light in background
+        const streetLampLight = new THREE.PointLight(0xffd27d, 1.6, 15);
+        streetLampLight.position.set(-4.2, 4.8, -2.5);
+        scene.add(streetLampLight);
+
+        /********************************************************************
+         * 5. INDONESIAN NIGHT STREET ENVIRONMENT & PASSING VEHICLES
+         ********************************************************************/
+        const envGroup = new THREE.Group();
+        scene.add(envGroup);
+
+        // Wet Asphalt Street
+        const roadMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(50, 18),
+            new THREE.MeshStandardMaterial({
+                map: asphaltTex,
+                roughness: 0.22,
+                metalness: 0.35
+            })
+        );
+        roadMesh.rotation.x = -Math.PI / 2;
+        roadMesh.position.set(0, 0, -6.5);
+        roadMesh.receiveShadow = true;
+        envGroup.add(roadMesh);
+
+        // Textured Sidewalk (Trotoar)
+        const sidewalkMesh = new THREE.Mesh(
+            new THREE.BoxGeometry(50, 0.18, 6.5),
+            new THREE.MeshStandardMaterial({
+                map: sidewalkTex,
+                roughness: 0.8
+            })
+        );
+        sidewalkMesh.position.set(0, 0.09, 0.5);
+        sidewalkMesh.receiveShadow = true;
+        envGroup.add(sidewalkMesh);
+
+        // Indonesian Black & White Painted Curb (Kanstin Trotoar Hitam Putih)
+        for (let i = -20; i <= 20; i++) {
+            const curb = new THREE.Mesh(
+                new THREE.BoxGeometry(0.98, 0.22, 0.22),
+                new THREE.MeshStandardMaterial({
+                    color: i % 2 === 0 ? 0xf1f5f9 : 0x111827,
+                    roughness: 0.6
+                })
+            );
+            curb.position.set(i, 0.11, -2.75);
+            curb.receiveShadow = true;
+            envGroup.add(curb);
+        }
+
+        // Streetlamp Pole & Head
+        const poleMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7, roughness: 0.3 });
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 5.0, 12), poleMat);
+        pole.position.set(-4.2, 2.5, -2.5);
+        pole.castShadow = true;
+        envGroup.add(pole);
+
+        const lampArm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 8), poleMat);
+        lampArm.rotation.z = Math.PI / 3;
+        lampArm.position.set(-3.7, 4.7, -2.5);
+        envGroup.add(lampArm);
+
+        const lampBulb = new THREE.Mesh(
+            new THREE.SphereGeometry(0.14, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0xffe49e })
+        );
+        lampBulb.position.set(-3.2, 4.9, -2.5);
+        envGroup.add(lampBulb);
+
+        // Trees & Silhouettes of Ruko / Warung Buildings across the street
+        for (let i = -18; i <= 18; i += 4.5) {
+            const h = 4.5 + (Math.abs(i * 7) % 5);
+            const bldg = new THREE.Mesh(
+                new THREE.BoxGeometry(3.8, h, 3.5),
+                new THREE.MeshStandardMaterial({ color: 0x131926, roughness: 0.9 })
+            );
+            bldg.position.set(i, h / 2, -13.5);
+            envGroup.add(bldg);
+
+            // Lit windows on background buildings
+            for (let wy = 1.5; wy < h - 0.8; wy += 1.4) {
+                if (Math.random() > 0.35) {
+                    const win = new THREE.Mesh(
+                        new THREE.PlaneGeometry(0.65, 0.8),
+                        new THREE.MeshBasicMaterial({ color: Math.random() > 0.3 ? 0xfde047 : 0x7dd3fc })
+                    );
+                    win.position.set(i - 0.7 + (Math.random() * 1.4), wy, -11.73);
+                    envGroup.add(win);
+                }
+            }
+        }
+
+        // Roadside Trees
+        function createTree(x, z) {
+            const tree = new THREE.Group();
+            const trunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.16, 0.24, 2.2, 8),
+                new THREE.MeshStandardMaterial({ color: 0x4a3219, roughness: 0.9 })
+            );
+            trunk.position.y = 1.1;
+            tree.add(trunk);
+
+            const foliageMat = new THREE.MeshStandardMaterial({ color: 0x1b4332, roughness: 0.8 });
+            const c1 = new THREE.Mesh(new THREE.DodecahedronGeometry(1.15, 1), foliageMat);
+            c1.position.set(0, 2.6, 0);
+            tree.add(c1);
+            const c2 = new THREE.Mesh(new THREE.DodecahedronGeometry(0.85, 1), foliageMat);
+            c2.position.set(0.55, 2.2, 0.3);
+            tree.add(c2);
+
+            tree.position.set(x, 0.15, z);
+            envGroup.add(tree);
+        }
+        createTree(4.6, -2.2);
+        createTree(-6.5, -2.0);
+
+        // Passing Vehicles on the wet road
+        const passingVehicles = [];
+        function createPassingVehicle(dir) {
+            const vGroup = new THREE.Group();
+            const bodyColors = [0xdc2626, 0x2563eb, 0xfacc15, 0x10b981, 0xe2e8f0];
+            const color = bodyColors[Math.floor(Math.random() * bodyColors.length)];
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(2.2, 0.75, 1.1),
+                new THREE.MeshStandardMaterial({ color, metalness: 0.5, roughness: 0.3 })
+            );
+            body.position.y = 0.55;
+            vGroup.add(body);
+
+            const cabin = new THREE.Mesh(
+                new THREE.BoxGeometry(1.2, 0.55, 0.95),
+                new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.2 })
+            );
+            cabin.position.set(0, 1.1, 0);
+            vGroup.add(cabin);
+
+            // Headlights
+            const headMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+            const tailMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+            const h1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.2), dir > 0 ? headMat : tailMat);
+            h1.position.set(1.11, 0.55, 0.35);
+            const h2 = h1.clone();
+            h2.position.z = -0.35;
+            vGroup.add(h1, h2);
+
+            vGroup.position.set(dir > 0 ? -24 : 24, 0.05, dir > 0 ? -5.2 : -7.8);
+            scene.add(vGroup);
+            passingVehicles.push({ mesh: vGroup, speed: (5.5 + Math.random() * 3.5) * dir });
+        }
+        createPassingVehicle(1);
+        createPassingVehicle(-1);
+
+        /********************************************************************
+         * 6. DETAILED 3D GEROBAK SATE MADURA / INDONESIA
+         ********************************************************************/
+        const cartGroup = new THREE.Group();
+        cartGroup.position.set(0, 0.18, 0);
+        scene.add(cartGroup);
+
+        const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.72 });
+        const blueTrimMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.5 });
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.75, roughness: 0.3 });
+        const darkIronMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, metalness: 0.65, roughness: 0.45 });
+
+        // Main Counter Body
+        const cartCounter = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.78, 1.05), woodMat);
+        cartCounter.position.set(0, 0.78, 0);
+        cartCounter.castShadow = true;
+        cartCounter.receiveShadow = true;
+        cartGroup.add(cartCounter);
+
+        // Decorative Blue Indonesian Gerobak Trim
+        const trimBar = new THREE.Mesh(new THREE.BoxGeometry(2.54, 0.1, 1.08), blueTrimMat);
+        trimBar.position.set(0, 1.15, 0);
+        cartGroup.add(trimBar);
+
+        // Two Large Spoked Wooden Wheels
+        function createCartWheel(zOffset) {
+            const wheelGroup = new THREE.Group();
+            const rim = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.04, 10, 24), darkIronMat);
+            wheelGroup.add(rim);
+            for (let i = 0; i < 6; i++) {
+                const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.82, 6), woodMat);
+                spoke.rotation.z = (i * Math.PI) / 6;
+                wheelGroup.add(spoke);
+            }
+            wheelGroup.position.set(-0.2, 0.42, zOffset);
+            cartGroup.add(wheelGroup);
+        }
+        createCartWheel(0.58);
+        createCartWheel(-0.58);
+
+        // Support Legs & Push Handles
+        const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8), woodMat);
+        leg1.position.set(0.95, 0.25, 0.42);
+        const leg2 = leg1.clone();
+        leg2.position.z = -0.42;
+        cartGroup.add(leg1, leg2);
+
+        // 4 Corner Pillars & Traditional Curved Roof
+        const pillarPos = [
+            [-1.18, 1.65, 0.46], [1.18, 1.65, 0.46],
+            [-1.18, 1.65, -0.46], [1.18, 1.65, -0.46]
+        ];
+        pillarPos.forEach(([px, py, pz]) => {
+            const p = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.05, 0.07), woodMat);
+            p.position.set(px, py, pz);
+            p.castShadow = true;
+            cartGroup.add(p);
+        });
+
+        // Roof (Atap Gerobak)
+        const roofMesh = new THREE.Mesh(new THREE.BoxGeometry(2.75, 0.16, 1.28), woodMat);
+        roofMesh.position.set(0, 2.22, 0);
+        roofMesh.castShadow = true;
+        cartGroup.add(roofMesh);
+
+        const roofCrown = new THREE.Mesh(new THREE.ConeGeometry(0.92, 0.35, 4), blueTrimMat);
+        roofCrown.rotation.y = Math.PI / 4;
+        roofCrown.scale.set(1.9, 1, 0.95);
+        roofCrown.position.set(0, 2.46, 0);
+        cartGroup.add(roofCrown);
+
+        // Hanging Bulb Socket & Cord
+        const bulbCord = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.22, 6), darkIronMat);
+        bulbCord.position.set(0, 2.08, 0);
+        cartGroup.add(bulbCord);
+
+        const physicalBulb = new THREE.Mesh(
+            new THREE.SphereGeometry(0.065, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0xffdd77 })
+        );
+        physicalBulb.position.set(0, 1.95, 0);
+        cartGroup.add(physicalBulb);
+
+        // LEFT SECTION: Glass Display Showcase (Etalase Kaca)
+        const glassMat = new THREE.MeshPhysicalMaterial({
+            color: 0xdbeafe,
+            transparent: true,
+            opacity: 0.32,
+            roughness: 0.1,
+            metalness: 0.1
+        });
+        const showcaseBox = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.65, 0.88), glassMat);
+        showcaseBox.position.set(-0.68, 1.5, 0);
+        cartGroup.add(showcaseBox);
+
+        // Raw Chicken & Mutton Satay Stacks inside Etalase (Clickable!)
+        const interactiveObjects = [];
+
+        function createRawStackMesh(type, x, z) {
+            const stackGroup = new THREE.Group();
+            const meatColor = type === 'ayam' ? 0xfda4af : 0xbe123c;
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 4; col++) {
+                    const skewer = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.012, 0.012, 0.28, 6),
+                        new THREE.MeshStandardMaterial({ color: meatColor, roughness: 0.45 })
+                    );
+                    skewer.rotation.z = Math.PI / 2;
+                    skewer.position.set(0, row * 0.028, (col - 1.5) * 0.045);
+                    stackGroup.add(skewer);
+                }
+            }
+            const hitBox = new THREE.Mesh(
+                new THREE.BoxGeometry(0.36, 0.18, 0.26),
+                new THREE.MeshBasicMaterial({ visible: false })
+            );
+            hitBox.userData = { action: 'spawnSatay', satayType: type };
+            stackGroup.add(hitBox);
+            interactiveObjects.push(hitBox);
+
+            stackGroup.position.set(x, 1.22, z);
+            cartGroup.add(stackGroup);
+        }
+        createRawStackMesh('ayam', -0.72, 0.18);
+        createRawStackMesh('kambing', -0.72, -0.18);
+
+        // Green Banana Leaf Lontong Cylinders inside Etalase
+        for (let i = 0; i < 4; i++) {
+            const lontongCyl = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.032, 0.032, 0.22, 10),
+                new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 })
+            );
+            lontongCyl.rotation.x = Math.PI / 2;
+            lontongCyl.position.set(-0.42, 1.22 + (i % 2) * 0.05, -0.1 + Math.floor(i / 2) * 0.08);
+            cartGroup.add(lontongCyl);
+        }
+
+        // CENTER SECTION: Serving Plate & Condiments (Meja Racik)
+        const plateGroup = new THREE.Group();
+        plateGroup.position.set(-0.04, 1.2, 0.18);
+        cartGroup.add(plateGroup);
+
+        const ceramicPlate = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.22, 0.16, 0.035, 24),
+            new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 })
+        );
+        plateGroup.add(ceramicPlate);
+
+        const bananaLeafLiner = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.18, 0.18, 0.038, 18),
+            new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.5 })
+        );
+        plateGroup.add(bananaLeafLiner);
+
+        // Dynamic visual toppings container on the plate
+        const plateContentsMeshGroup = new THREE.Group();
+        plateGroup.add(plateContentsMeshGroup);
+
+        // Condiment Containers behind the plate (Clickable in 3D!)
+        function createCondimentPot(x, z, color, toppingKey) {
+            const potGroup = new THREE.Group();
+            const pot = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.085, 0.07, 0.12, 14),
+                new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.5 })
+            );
+            const filling = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.075, 0.075, 0.125, 14),
+                new THREE.MeshStandardMaterial({ color, roughness: 0.3 })
+            );
+            potGroup.add(pot, filling);
+            potGroup.position.set(x, 1.24, z);
+            pot.userData = { action: 'addTopping', topping: toppingKey };
+            interactiveObjects.push(pot);
+            cartGroup.add(potGroup);
+        }
+        createCondimentPot(-0.18, -0.22, 0x78350f, 'kacang'); // Bumbu Kacang
+        createCondimentPot(0.02, -0.22, 0xdc2626, 'sambal');  // Sambal Rawit
+        createCondimentPot(0.20, -0.22, 0x9333ea, 'bawang');  // Irisan Bawang Merah
+
+        // Sweet Soy Sauce Bottle (Botol Kecap Manis)
+        const kecapBottle = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.03, 0.048, 0.22, 12),
+            new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.15 })
+        );
+        kecapBottle.position.set(0.22, 1.29, 0.05);
+        kecapBottle.userData = { action: 'addTopping', topping: 'kecap' };
+        interactiveObjects.push(kecapBottle);
+        cartGroup.add(kecapBottle);
+
+        // RIGHT SECTION: Long Iron Charcoal Grill (Panggangan Arang Sate)
+        const grillGroup = new THREE.Group();
+        grillGroup.position.set(0.68, 1.22, 0.05);
+        cartGroup.add(grillGroup);
+
+        const grillTrough = new THREE.Mesh(
+            new THREE.BoxGeometry(0.92, 0.14, 0.42),
+            darkIronMat
+        );
+        grillTrough.castShadow = true;
+        grillGroup.add(grillTrough);
+
+        // Glowing Charcoal Chunks inside the grill trough
+        const charcoalChunks = [];
+        for (let i = 0; i < 38; i++) {
+            const cMat = new THREE.MeshStandardMaterial({
+                color: 0x18181b,
+                emissive: 0xff3b00,
+                emissiveIntensity: 0.8,
+                roughness: 0.85
+            });
+            const chunk = new THREE.Mesh(new THREE.DodecahedronGeometry(0.032 + Math.random() * 0.022, 0), cMat);
+            chunk.position.set(
+                (Math.random() - 0.5) * 0.8,
+                0.055 + Math.random() * 0.02,
+                (Math.random() - 0.5) * 0.3
+            );
+            chunk.rotation.set(Math.random() * 3, Math.random() * 3, 0);
+            grillGroup.add(chunk);
+            charcoalChunks.push(chunk);
+        }
+
+        // 3D Traditional Woven Bamboo Fan (Kipas Bambu Anyaman)
+        const bambooFanGroup = new THREE.Group();
+        const fanBlade = new THREE.Mesh(
+            new THREE.BoxGeometry(0.24, 0.22, 0.015),
+            new THREE.MeshStandardMaterial({ color: 0xca8a04, roughness: 0.7 })
+        );
+        fanBlade.position.y = 0.14;
+        const fanHandle = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.012, 0.012, 0.18, 8),
+            woodMat
+        );
+        bambooFanGroup.add(fanBlade, fanHandle);
+        bambooFanGroup.position.set(0.68, 1.38, 0.45);
+        bambooFanGroup.rotation.x = -0.35;
+        cartGroup.add(bambooFanGroup);
+
+        // UPGRADE MODELS (Initially hidden until bought in shop)
+        // 1. Electric Mini Fan 3D
+        const electricFanGroup = new THREE.Group();
+        const fanStand = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.22, 10), metalMat);
+        const fanCage = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.05, 16), blueTrimMat);
+        fanCage.rotation.z = Math.PI / 2;
+        fanCage.position.y = 0.14;
+        const fanRotor = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.18, 0.04), metalMat);
+        fanRotor.position.set(-0.03, 0.14, 0);
+        electricFanGroup.add(fanStand, fanCage, fanRotor);
+        electricFanGroup.position.set(1.16, 1.28, 0.05);
+        electricFanGroup.visible = false;
+        cartGroup.add(electricFanGroup);
+
+        // 2. Neon Sign 3D on Cart Roof
+        const neonSignGroup = new THREE.Group();
+        const neonBoard = new THREE.Mesh(
+            new THREE.BoxGeometry(1.75, 0.34, 0.08),
+            new THREE.MeshStandardMaterial({
+                color: 0x3b0764,
+                emissive: 0xd946ef,
+                emissiveIntensity: 0.85,
+                roughness: 0.2
+            })
+        );
+        neonSignGroup.add(neonBoard);
+        neonSignGroup.position.set(0, 2.55, 0.52);
+        neonSignGroup.visible = false;
+        cartGroup.add(neonSignGroup);
+
+        /********************************************************************
+         * 7. TWO-SIDED SATAY GRILLING SLOTS & REAL-TIME COLOR SHADING
+         ********************************************************************/
+        function initGrillSlots() {
+            // Clear existing slots meshes
+            state.grillSlots.forEach(s => {
+                if (s.mesh) grillGroup.remove(s.mesh);
+                if (s.labelEl) s.labelEl.remove();
+            });
+            state.grillSlots = [];
+
+            const count = state.maxGrillSlots;
+            const span = 0.76;
+            const startX = -span / 2;
+            const stepX = count > 1 ? span / (count - 1) : 0;
+
+            for (let i = 0; i < count; i++) {
+                const slotX = startX + i * stepX;
+
+                // Create floating HTML mini-badge for each grill slot
+                const labelEl = document.createElement('div');
+                labelEl.className = 'absolute hidden pointer-events-auto transform -translate-x-1/2 -translate-y-full';
+                labelEl.innerHTML = `
+                    <div class="bg-slate-950/90 border border-amber-400/50 rounded-xl px-2 py-1 text-[10px] shadow-lg flex flex-col items-center gap-0.5 min-w-[78px]">
+                        <div class="font-extrabold text-amber-300 slot-title">Ayam</div>
+                        <div class="w-full flex items-center gap-1">
+                            <span class="text-[9px] text-slate-400">A</span>
+                            <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden"><div class="slot-bar-a h-full bg-amber-400" style="width:0%"></div></div>
+                        </div>
+                        <div class="w-full flex items-center gap-1">
+                            <span class="text-[9px] text-slate-400">B</span>
+                            <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden"><div class="slot-bar-b h-full bg-amber-400" style="width:0%"></div></div>
+                        </div>
+                        <div class="flex gap-1 mt-0.5 w-full">
+                            <button onclick="flipSataySlot(${i})" class="flex-1 bg-sky-500/30 hover:bg-sky-500/50 text-sky-200 rounded px-1 py-0.5 font-bold">Balik</button>
+                            <button onclick="plateSataySlot(${i})" class="flex-1 bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-200 rounded px-1 py-0.5 font-bold">Angkat</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('world-labels').appendChild(labelEl);
+
+                state.grillSlots.push({
+                    index: i,
+                    localX: slotX,
+                    occupied: false,
+                    type: null, // 'ayam' or 'kambing'
+                    sideA: 0,   // 0 to 200
+                    sideB: 0,   // 0 to 200
+                    currentSide: 'A', // 'A' is facing down towards charcoal initially
+                    flipTargetRotZ: 0,
+                    mesh: null,
+                    meatMeshes: [],
+                    labelEl
+                });
+            }
+        }
+        initGrillSlots();
+
+        function createSatayClusterMesh(type, slotIndex) {
+            const cluster = new THREE.Group();
+            const meatMeshes = [];
+            const rawColor = type === 'ayam' ? new THREE.Color(0xfda4af) : new THREE.Color(0xbe123c);
+
+            // Each slot holds 3 visual skewers representing 1 portion (5 tusuk)
+            for (let s = -1; s <= 1; s++) {
+                const skewerStick = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.004, 0.004, 0.42, 6),
+                    new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.7 })
+                );
+                skewerStick.rotation.x = Math.PI / 2;
+                skewerStick.position.set(s * 0.025, 0, 0);
+                cluster.add(skewerStick);
+
+                // 4 meat cubes per skewer
+                for (let c = 0; c < 4; c++) {
+                    const isFatCube = (type === 'kambing' && c === 1);
+                    const mat = new THREE.MeshStandardMaterial({
+                        color: isFatCube ? 0xfef3c7 : rawColor.clone(),
+                        roughness: 0.55,
+                        metalness: 0.05
+                    });
+                    const cube = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.022, 0.032), mat);
+                    cube.position.set(s * 0.025, 0, -0.11 + c * 0.045);
+                    cube.castShadow = true;
+                    cluster.add(cube);
+                    meatMeshes.push({ mesh: cube, isFatCube });
+                }
+            }
+
+            // Invisible click box for raycasting flip/plate
+            const clickBox = new THREE.Mesh(
+                new THREE.BoxGeometry(0.09, 0.06, 0.42),
+                new THREE.MeshBasicMaterial({ visible: false })
+            );
+            clickBox.userData = { action: 'grillSlotClick', slotIndex };
+            cluster.add(clickBox);
+            interactiveObjects.push(clickBox);
+
+            return { cluster, meatMeshes };
+        }
+
+        function placeSatayOnGrill(type) {
+            if (!state.started) return;
+            const stockKey = type === 'ayam' ? 'chicken' : 'mutton';
+            if (state.stock[stockKey] <= 0) {
+                audio.playError();
+                showFloatingToast(`Stok Sate ${type.toUpperCase()} habis! Beli di Toko.`, 'text-rose-400');
+                return;
+            }
+
+            const emptySlot = state.grillSlots.find(s => !s.occupied);
+            if (!emptySlot) {
+                audio.playError();
+                showFloatingToast('Panggangan penuh! Angkat sate atau upgrade Panggangan Jumbo.', 'text-amber-300');
+                return;
+            }
+
+            state.stock[stockKey]--;
+            updateHUD();
+
+            const { cluster, meatMeshes } = createSatayClusterMesh(type, emptySlot.index);
+            cluster.position.set(emptySlot.localX, 0.085, 0.03);
+            grillGroup.add(cluster);
+
+            emptySlot.occupied = true;
+            emptySlot.type = type;
+            emptySlot.sideA = 0;
+            emptySlot.sideB = 0;
+            emptySlot.currentSide = 'A';
+            emptySlot.flipTargetRotZ = 0;
+            emptySlot.mesh = cluster;
+            emptySlot.meatMeshes = meatMeshes;
+            emptySlot.labelEl.classList.remove('hidden');
+
+            audio.playPop(360);
+        }
+
+        function flipSataySlot(index) {
+            const slot = state.grillSlots[index];
+            if (!slot || !slot.occupied) return;
+            slot.currentSide = slot.currentSide === 'A' ? 'B' : 'A';
+            slot.flipTargetRotZ += Math.PI;
+            audio.playPop(520);
+        }
+
+        function flipAllSatay() {
+            let flipped = 0;
+            state.grillSlots.forEach((s, idx) => {
+                if (s.occupied) {
+                    flipSataySlot(idx);
+                    flipped++;
+                }
+            });
+            if (flipped > 0) {
+                showFloatingToast(`Membalik ${flipped} porsi sate!`, 'text-sky-300');
+            }
+        }
+
+        function plateSataySlot(index) {
+            const slot = state.grillSlots[index];
+            if (!slot || !slot.occupied) return;
+
+            // Compute cook score based on Side A and Side B
+            const avgCook = (slot.sideA + slot.sideB) / 2;
+            const minSide = Math.min(slot.sideA, slot.sideB);
+            const maxSide = Math.max(slot.sideA, slot.sideB);
+
+            if (slot.type === 'ayam') {
+                state.plate.chickenPortions.push({ sideA: slot.sideA, sideB: slot.sideB, avgCook, minSide, maxSide });
+            } else {
+                state.plate.muttonPortions.push({ sideA: slot.sideA, sideB: slot.sideB, avgCook, minSide, maxSide });
+            }
+
+            // Remove from grill
+            grillGroup.remove(slot.mesh);
+            slot.occupied = false;
+            slot.mesh = null;
+            slot.meatMeshes = [];
+            slot.labelEl.classList.add('hidden');
+
+            audio.playPop(640);
+            rebuildPlateVisuals();
+            updatePlateUI();
+        }
+
+        function plateAllCookedSatay() {
+            let count = 0;
+            state.grillSlots.forEach((s, idx) => {
+                if (s.occupied && s.sideA >= 70 && s.sideB >= 70) {
+                    plateSataySlot(idx);
+                    count++;
+                }
+            });
+            if (count === 0) {
+                showFloatingToast('Belum ada sate yang matang di kedua sisi (minimal 70%)!', 'text-amber-300');
+            } else {
+                showFloatingToast(`${count} porsi sate matang dipindah ke piring!`, 'text-emerald-300');
+            }
+        }
+
+        /********************************************************************
+         * 8. PLATING & CONDIMENT POURING VISUALS
+         ********************************************************************/
+        function addToppingToPlate(topping) {
+            if (!state.started) return;
+            const totalPortions = state.plate.chickenPortions.length + state.plate.muttonPortions.length;
+            if (totalPortions === 0 && topping !== 'lontong') {
+                showFloatingToast('Taruh sate yang sudah matang ke piring terlebih dahulu!', 'text-amber-300');
+                audio.playError();
+                return;
+            }
+
+            if (topping === 'lontong') {
+                if (state.plate.lontong) return;
+                if (state.stock.lontong <= 0) {
+                    showFloatingToast('Stok Lontong habis! Beli di Toko.', 'text-rose-400');
+                    audio.playError();
+                    return;
+                }
+                state.stock.lontong--;
+                state.plate.lontong = true;
+            } else {
+                if (state.plate[topping]) return;
+                if (state.stock.spice <= 0) {
+                    showFloatingToast('Stok Bumbu habis! Beli di Toko.', 'text-rose-400');
+                    audio.playError();
+                    return;
+                }
+                if (topping === 'kacang') state.stock.spice--;
+                state.plate[topping] = true;
+            }
+
+            audio.playPop(720);
+            rebuildPlateVisuals();
+            updatePlateUI();
+            updateHUD();
+        }
+
+        function clearPlate() {
+            state.plate = {
+                chickenPortions: [],
+                muttonPortions: [],
+                lontong: false,
+                kacang: false,
+                kecap: false,
+                sambal: false,
+                bawang: false
+            };
+            rebuildPlateVisuals();
+            updatePlateUI();
+            audio.playPop(260);
+        }
+
+        function rebuildPlateVisuals() {
+            while (plateContentsMeshGroup.children.length > 0) {
+                plateContentsMeshGroup.remove(plateContentsMeshGroup.children[0]);
+            }
+
+            // 1. Lontong Slices on Plate
+            if (state.plate.lontong) {
+                for (let i = 0; i < 5; i++) {
+                    const slice = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.028, 0.028, 0.02, 10),
+                        new THREE.MeshStandardMaterial({ color: 0xecfdf5, roughness: 0.5 })
+                    );
+                    slice.position.set(-0.07 + i * 0.032, 0.03, 0.06);
+                    plateContentsMeshGroup.add(slice);
+                }
+            }
+
+            // 2. Cooked Satay Skewers on Plate
+            const totalPortions = state.plate.chickenPortions.length + state.plate.muttonPortions.length;
+            for (let p = 0; p < totalPortions; p++) {
+                const sk = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.22, 0.025, 0.05),
+                    new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.25 })
+                );
+                sk.position.set(0, 0.035 + p * 0.022, -0.02);
+                sk.rotation.y = (p - 0.5) * 0.25;
+                plateContentsMeshGroup.add(sk);
+            }
+
+            // 3. Peanut Sauce Pour (Bumbu Kacang)
+            if (state.plate.kacang) {
+                const sauce = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.095, 14, 10),
+                    new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.35 })
+                );
+                sauce.scale.set(1.2, 0.28, 0.85);
+                sauce.position.set(0, 0.045 + totalPortions * 0.015, -0.01);
+                plateContentsMeshGroup.add(sauce);
+            }
+
+            // 4. Sweet Soy Sauce Drizzle (Kecap Manis)
+            if (state.plate.kecap) {
+                const kecap = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.075, 0.075, 0.008, 12),
+                    new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.1 })
+                );
+                kecap.position.set(0, 0.062 + totalPortions * 0.015, -0.01);
+                plateContentsMeshGroup.add(kecap);
+            }
+
+            // 5. Sambal & Bawang
+            if (state.plate.sambal) {
+                const sambal = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.028, 8, 8),
+                    new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3 })
+                );
+                sambal.position.set(0.08, 0.04, 0.04);
+                plateContentsMeshGroup.add(sambal);
+            }
+            if (state.plate.bawang) {
+                for (let b = 0; b < 6; b++) {
+                    const bw = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.014, 0.006, 0.014),
+                        new THREE.MeshStandardMaterial({ color: 0xc084fc })
+                    );
+                    bw.position.set((Math.random() - 0.5) * 0.12, 0.068 + totalPortions * 0.015, (Math.random() - 0.5) * 0.08);
+                    plateContentsMeshGroup.add(bw);
+                }
+            }
+        }
+
+        function updatePlateUI() {
+            const box = document.getElementById('plate-summary');
+            const cCount = state.plate.chickenPortions.length;
+            const mCount = state.plate.muttonPortions.length;
+            const toppings = [];
+            if (state.plate.lontong) toppings.push('🍃 Lontong');
+            if (state.plate.kacang) toppings.push('🥜 Kacang');
+            if (state.plate.kecap) toppings.push('🫗 Kecap');
+            if (state.plate.sambal) toppings.push('🌶️ Sambal');
+            if (state.plate.bawang) toppings.push('🧅 Bawang');
+
+            if (cCount === 0 && mCount === 0 && toppings.length === 0) {
+                box.innerHTML = `<div class="text-slate-500 italic text-center py-1">Piring masih kosong. Angkat sate matang dari panggangan!</div>`;
+                return;
+            }
+
+            let html = `<div class="font-bold text-white flex flex-wrap gap-1.5">`;
+            if (cCount > 0) html += `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">${cCount} Porsi Ayam (${cCount * 5} tsk)</span>`;
+            if (mCount > 0) html += `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">${mCount} Porsi Kambing (${mCount * 5} tsk)</span>`;
+            html += `</div>`;
+            if (toppings.length > 0) {
+                html += `<div class="text-[11px] text-emerald-300 mt-1">${toppings.join(' • ')}</div>`;
+            } else {
+                html += `<div class="text-[11px] text-slate-400 mt-1">Belum diberi bumbu/topping</div>`;
+            }
+            box.innerHTML = html;
+        }
+
+        /********************************************************************
+         * 9. 3D PARTICLE SYSTEM: BILLOWING SMOKE & FLYING CHARCOAL EMBERS
+         ********************************************************************/
+        const smokeParticles = [];
+        const emberParticles = [];
+
+        const smokeGeo = new THREE.DodecahedronGeometry(0.06, 0);
+        const emberGeo = new THREE.BoxGeometry(0.016, 0.016, 0.016);
+
+        function spawnSmokeParticle() {
+            const mat = new THREE.MeshLambertMaterial({
+                color: 0xe2e8f0,
+                transparent: true,
+                opacity: 0.38
+            });
+            const p = new THREE.Mesh(smokeGeo, mat);
+            const worldGrillPos = new THREE.Vector3(
+                0.68 + (Math.random() - 0.5) * 0.75,
+                1.48,
+                0.05 + (Math.random() - 0.5) * 0.25
+            );
+            p.position.copy(worldGrillPos);
+            scene.add(p);
+            smokeParticles.push({
+                mesh: p,
+                vx: (Math.random() - 0.5) * 0.15 - (state.isFanning ? 0.65 : 0.05),
+                vy: 0.45 + Math.random() * 0.35 + (state.isFanning ? 0.35 : 0),
+                vz: (Math.random() - 0.5) * 0.2 - (state.isFanning ? 0.4 : 0),
+                age: 0,
+                maxAge: 2.0 + Math.random() * 1.2
+            });
+        }
+
+        function spawnEmberParticle() {
+            const mat = new THREE.MeshBasicMaterial({
+                color: Math.random() > 0.4 ? 0xff6b00 : 0xfacc15
+            });
+            const p = new THREE.Mesh(emberGeo, mat);
+            p.position.set(
+                0.68 + (Math.random() - 0.5) * 0.72,
+                1.42,
+                0.05 + (Math.random() - 0.5) * 0.25
+            );
+            scene.add(p);
+            emberParticles.push({
+                mesh: p,
+                vx: (Math.random() - 0.5) * 0.8 - (state.isFanning ? 0.9 : 0),
+                vy: 0.9 + Math.random() * 1.1,
+                vz: (Math.random() - 0.5) * 0.8,
+                age: 0,
+                maxAge: 0.75 + Math.random() * 0.5
+            });
+        }
+
+        /********************************************************************
+         * 10. 3D NPC CUSTOMERS AI, QUEUE & COMPLEX ORDER EVALUATION
+         ********************************************************************/
+        const npcNames = [
+            'Pak Budi', 'Mbak Rina', 'Mas Dimas', 'Bu RT Siti', 'Bang Jago',
+            'Kak Nabila', 'Pak Haji Umar', 'Mas Wahyu Ojol', 'Mbak Sari', 'Ko Hendra'
+        ];
+        const shirtColors = [0xef4444, 0x3b82f6, 0x10b981, 0xf59e0b, 0x8b5cf6, 0xec4899, 0x14b8a6];
+
+        function createCustomerNPC() {
+            const npcGroup = new THREE.Group();
+            const shirtColor = shirtColors[Math.floor(Math.random() * shirtColors.length)];
+
+            // Torso
+            const torso = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.2, 0.23, 0.68, 12),
+                new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.7 })
+            );
+            torso.position.y = 0.85;
+            torso.castShadow = true;
+            npcGroup.add(torso);
+
+            // Legs
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
+            const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.55, 8), pantsMat);
+            legL.position.set(-0.1, 0.28, 0);
+            const legR = legL.clone();
+            legR.position.x = 0.1;
+            npcGroup.add(legL, legR);
+
+            // Head
+            const head = new THREE.Mesh(
+                new THREE.SphereGeometry(0.18, 14, 14),
+                new THREE.MeshStandardMaterial({ color: 0xfdba74, roughness: 0.5 })
+            );
+            head.position.y = 1.4;
+            head.castShadow = true;
+            npcGroup.add(head);
+
+            // Hair / Peci / Helmet accessory
+            const hat = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.185, 0.185, 0.12, 12),
+                new THREE.MeshStandardMaterial({ color: 0x111827 })
+            );
+            hat.position.y = 1.53;
+            npcGroup.add(hat);
+
+            // Clickable to serve directly
+            torso.userData = { action: 'serveCustomer' };
+            head.userData = { action: 'serveCustomer' };
+            interactiveObjects.push(torso, head);
+
+            // Generate dynamic Indonesian Satay Order
+            const isMutton = Math.random() > 0.52;
+            const portions = Math.random() > 0.65 ? 2 : 1; // 1 portion = 5 tusuk, 2 portions = 10 tusuk
+            const wantsLontong = Math.random() > 0.35;
+            const wantsKacang = isMutton ? (Math.random() > 0.35) : true; // Mutton sometimes Kecap-only
+            const wantsKecap = true;
+            const wantsSambal = Math.random() > 0.4;
+            const wantsBawang = Math.random() > 0.3;
+
+            let basePrice = (isMutton ? 22000 : 16000) * portions + (wantsLontong ? 5000 : 0);
+            if (state.upgrades.secretRecipe) basePrice = Math.round(basePrice * 1.4);
+
+            const maxPatience = state.upgrades.neonSign ? 95 : 72;
+
+            npcGroup.position.set(-8.0, 0.18, -1.35);
+            scene.add(npcGroup);
+
+            state.customers.push({
+                name: npcNames[Math.floor(Math.random() * npcNames.length)],
+                mesh: npcGroup,
+                walkPhase: Math.random() * 5,
+                patience: maxPatience,
+                maxPatience,
+                order: {
+                    type: isMutton ? 'kambing' : 'ayam',
+                    portions,
+                    lontong: wantsLontong,
+                    kacang: wantsKacang,
+                    kecap: wantsKecap,
+                    sambal: wantsSambal,
+                    bawang: wantsBawang,
+                    price: basePrice
+                }
+            });
+
+            updateOrderUI();
+        }
+
+        function updateOrderUI() {
+            const nameEl = document.getElementById('npc-name');
+            const queueEl = document.getElementById('npc-queue-count');
+            const priceEl = document.getElementById('order-price-badge');
+            const detailsBox = document.getElementById('order-details-box');
+            const patContainer = document.getElementById('patience-container');
+
+            queueEl.textContent = `Antrean: ${state.customers.length} pelanggan`;
+
+            if (state.customers.length === 0) {
+                nameEl.textContent = 'Menunggu Pelanggan...';
+                priceEl.textContent = 'Rp 0';
+                detailsBox.innerHTML = `<div class="text-slate-400 italic py-2 text-center">Pelanggan sedang berjalan menuju gerobak sate Anda...</div>`;
+                patContainer.classList.add('hidden');
+                return;
+            }
+
+            const front = state.customers[0];
+            const o = front.order;
+            nameEl.textContent = front.name;
+            priceEl.textContent = formatRupiah(o.price);
+            patContainer.classList.remove('hidden');
+
+            const badges = [];
+            if (o.lontong) badges.push('<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">🍃 Pakai Lontong</span>');
+            if (o.kacang) badges.push('<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">🥜 Bumbu Kacang</span>');
+            if (o.kecap) badges.push('<span class="px-2 py-0.5 rounded bg-stone-700 text-stone-200">🫗 Kecap Manis</span>');
+            if (o.sambal) badges.push('<span class="px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">🌶️ Pedas Sambal</span>');
+            if (o.bawang) badges.push('<span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">🧅 Bawang Merah</span>');
+
+            detailsBox.innerHTML = `
+                <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+                    <div class="font-extrabold text-sm ${o.type === 'ayam' ? 'text-amber-300' : 'text-rose-300'}">
+                        ${o.type === 'ayam' ? '🍢' : '🥩'} ${o.portions} Porsi Sate ${o.type.toUpperCase()} (${o.portions * 5} Tusuk)
+                    </div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">Tingkat Kematangan: <b class="text-emerald-300">Matang Pas Merata (Sisi A & B)</b></div>
+                    <div class="flex flex-wrap gap-1 mt-2">${badges.join('')}</div>
+                </div>
+            `;
+        }
+
+        function servePlateToCustomer() {
+            if (state.customers.length === 0) {
+                showFloatingToast('Belum ada pelanggan di depan gerobak!', 'text-amber-300');
+                audio.playError();
+                return;
+            }
+
+            const totalPortions = state.plate.chickenPortions.length + state.plate.muttonPortions.length;
+            if (totalPortions === 0) {
+                showFloatingToast('Piring masih kosong! Angkat sate matang ke piring dulu.', 'text-rose-400');
+                audio.playError();
+                return;
+            }
+
+            const customer = state.customers[0];
+            const o = customer.order;
+
+            let stars = 5;
+            const notes = [];
+
+            // 1. Check meat type and portion count
+            const servedPortions = o.type === 'ayam' ? state.plate.chickenPortions : state.plate.muttonPortions;
+            const wrongPortions = o.type === 'ayam' ? state.plate.muttonPortions : state.plate.chickenPortions;
+
+            if (wrongPortions.length > 0 || servedPortions.length === 0) {
+                stars -= 2;
+                notes.push('Salah jenis daging sate!');
+            } else if (servedPortions.length !== o.portions) {
+                stars -= 1;
+                notes.push('Jumlah porsi kurang tepat');
+            }
+
+            // 2. Check cooking quality of both sides (Raw < 75, Ideal 75-135, Burnt > 140)
+            servedPortions.forEach(p => {
+                if (p.minSide < 70) {
+                    stars -= 2;
+                    notes.push('Masih ada sisi yang mentah!');
+                } else if (p.maxSide > 145) {
+                    stars -= 2;
+                    notes.push('Sate agak gosong pahit!');
+                }
+            });
+
+            // 3. Check condiments & Lontong accuracy
+            let condimentMistakes = 0;
+            ['lontong', 'kacang', 'kecap', 'sambal', 'bawang'].forEach(k => {
+                if (Boolean(state.plate[k]) !== Boolean(o[k])) condimentMistakes++;
+            });
+            if (condimentMistakes > 0) {
+                stars -= Math.min(2, condimentMistakes);
+                notes.push('Racikan bumbu/lontong kurang sesuai');
+            }
+
+            stars = Math.max(1, Math.min(5, stars));
+
+            // Calculate payout + tip
+            const patienceRatio = customer.patience / customer.maxPatience;
+            const tip = stars === 5 ? Math.round(o.price * 0.25 * patienceRatio) : (stars === 4 ? 3000 : 0);
+            const finalEarned = Math.round(o.price * (stars / 5)) + tip;
+
+            state.money += finalEarned;
+            state.servedCount++;
+            state.rating = Number(((state.rating * (state.servedCount - 1) + stars) / state.servedCount).toFixed(1));
+
+            audio.playCashRegister();
+
+            const msg = notes.length === 0 ? 'Sempurna! Pelanggan Puas!' : notes[0];
+            showFloatingToast(`⭐ ${stars}/5 • +${formatRupiah(finalEarned)} (Tip ${formatRupiah(tip)}) — ${msg}`, stars >= 4 ? 'text-emerald-300' : 'text-amber-300');
+
+            // Remove customer & clear plate
+            scene.remove(customer.mesh);
+            state.customers.shift();
+            clearPlate();
+            updateOrderUI();
+            updateHUD();
+        }
+
+        /********************************************************************
+         * 11. ECONOMY, STOCK & UPGRADES LOGIC
+         ********************************************************************/
+        function toggleShopModal(show) {
+            const modal = document.getElementById('shop-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                updateHUD();
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function buyStock(key, amount, cost) {
+            if (state.money < cost) {
+                audio.playError();
+                showFloatingToast('Saldo Rupiah tidak cukup!', 'text-rose-400');
+                return;
+            }
+            state.money -= cost;
+            state.stock[key] += amount;
+            audio.playCashRegister();
+            updateHUD();
+            showFloatingToast(`Berhasil membeli stok tambahan!`, 'text-emerald-300');
+        }
+
+        function buyUpgrade(upgradeKey, cost) {
+            if (state.upgrades[upgradeKey]) return;
+            if (state.money < cost) {
+                audio.playError();
+                showFloatingToast('Saldo Rupiah belum cukup untuk upgrade ini!', 'text-rose-400');
+                return;
+            }
+
+            state.money -= cost;
+            state.upgrades[upgradeKey] = true;
+            audio.playCashRegister();
+
+            if (upgradeKey === 'electricFan') {
+                electricFanGroup.visible = true;
+                const btn = document.getElementById('upg-btn-fan');
+                btn.textContent = 'Sudah Terpasang ✓';
+                btn.disabled = true;
+                btn.className = 'w-full py-2 rounded-xl bg-slate-800 text-emerald-400 font-bold text-xs cursor-default';
+            } else if (upgradeKey === 'jumboGrill') {
+                state.maxGrillSlots = 8;
+                initGrillSlots();
+                const btn = document.getElementById('upg-btn-grill');
+                btn.textContent = 'Sudah Terpasang (8 Slot) ✓';
+                btn.disabled = true;
+                btn.className = 'w-full py-2 rounded-xl bg-slate-800 text-emerald-400 font-bold text-xs cursor-default';
+            } else if (upgradeKey === 'neonSign') {
+                neonSignGroup.visible = true;
+                const btn = document.getElementById('upg-btn-neon');
+                btn.textContent = 'Sudah Terpasang ✓';
+                btn.disabled = true;
+                btn.className = 'w-full py-2 rounded-xl bg-slate-800 text-emerald-400 font-bold text-xs cursor-default';
+            } else if (upgradeKey === 'secretRecipe') {
+                const btn = document.getElementById('upg-btn-recipe');
+                btn.textContent = 'Resep Aktif (+40% Harga) ✓';
+                btn.disabled = true;
+                btn.className = 'w-full py-2 rounded-xl bg-slate-800 text-emerald-400 font-bold text-xs cursor-default';
+            }
+
+            updateHUD();
+            showFloatingToast('Upgrade Gerobak 3D berhasil dipasang!', 'text-amber-300');
+        }
+
+        /********************************************************************
+         * 12. FANNING CONTROLS, RAYCASTING & INPUT HANDLERS
+         ********************************************************************/
+        function startFanning(e) {
+            if (e) e.preventDefault();
+            if (!state.started) return;
+            state.isFanning = true;
+            audio.playFanWhoosh();
+        }
+
+        function stopFanning() {
+            state.isFanning = false;
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.repeat) {
+                startFanning();
+            } else if (e.key === '1') {
+                setCameraPreset(1);
+            } else if (e.key === '2') {
+                setCameraPreset(2);
+            } else if (e.key === '3') {
+                setCameraPreset(3);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') stopFanning();
+        });
+
+        // 3D Raycasting & Camera Orbit Dragging
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        renderer.domElement.addEventListener('mousedown', (e) => {
+            if (e.button === 2) {
+                // Right click flips satay under cursor
+                handleCanvasClick(e, true);
+                return;
+            }
+            camControl.isDragging = true;
+            camControl.prevMouse = { x: e.clientX, y: e.clientY };
+            handleCanvasClick(e, false);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!camControl.isDragging) return;
+            const dx = (e.clientX - camControl.prevMouse.x) * 0.005;
+            const dy = (e.clientY - camControl.prevMouse.y) * 0.004;
+            camControl.orbitOffset.x = Math.max(-1.6, Math.min(1.6, camControl.orbitOffset.x - dx));
+            camControl.orbitOffset.y = Math.max(-0.5, Math.min(1.2, camControl.orbitOffset.y + dy));
+            camControl.prevMouse = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('mouseup', () => {
+            camControl.isDragging = false;
+        });
+
+        renderer.domElement.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            camControl.orbitOffset.z = Math.max(-1.1, Math.min(2.2, camControl.orbitOffset.z + e.deltaY * 0.0015));
+        }, { passive: false });
+
+        renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        function handleCanvasClick(e, isRightClick) {
+            if (!state.started) return;
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const hits = raycaster.intersectObjects(interactiveObjects, false);
+            if (hits.length === 0) return;
+
+            const data = hits[0].object.userData;
+            if (!data) return;
+
+            if (data.action === 'spawnSatay') {
+                placeSatayOnGrill(data.satayType);
+            } else if (data.action === 'addTopping') {
+                addToppingToPlate(data.topping);
+            } else if (data.action === 'grillSlotClick') {
+                const slot = state.grillSlots[data.slotIndex];
+                if (!slot || !slot.occupied) return;
+                if (isRightClick) {
+                    flipSataySlot(data.slotIndex);
+                } else {
+                    // Left click flips if current side is cooked and other side is still raw, otherwise plates if both cooked
+                    if (slot.sideA >= 70 && slot.sideB >= 70) {
+                        plateSataySlot(data.slotIndex);
+                    } else {
+                        flipSataySlot(data.slotIndex);
+                    }
+                }
+            } else if (data.action === 'serveCustomer') {
+                servePlateToCustomer();
+            }
+        }
+
+        /********************************************************************
+         * 13. HUD UPDATES, FLOATING TOASTS & GAME START
+         ********************************************************************/
+        function formatRupiah(num) {
+            return 'Rp ' + Math.round(num).toLocaleString('id-ID');
+        }
+
+        function showFloatingToast(message, colorClass = 'text-amber-300') {
+            const containerEl = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `floating-toast hud-panel px-4 py-2 rounded-2xl font-extrabold text-xs sm:text-sm shadow-2xl border border-amber-400/40 mb-2 ${colorClass}`;
+            toast.textContent = message;
+            containerEl.appendChild(toast);
+            setTimeout(() => toast.remove(), 1800);
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-money').textContent = formatRupiah(state.money);
+            document.getElementById('hud-rating').textContent = state.rating.toFixed(1);
+            document.getElementById('hud-served').textContent = state.servedCount;
+
+            // Update Stock counters in HUD and Shop Modal
+            const stockMap = [
+                ['stock-chicken', 'modal-stock-chicken', state.stock.chicken],
+                ['stock-mutton', 'modal-stock-mutton', state.stock.mutton],
+                ['stock-lontong', 'modal-stock-lontong', state.stock.lontong],
+                ['stock-spice', 'modal-stock-spice', state.stock.spice]
+            ];
+            stockMap.forEach(([hudId, modalId, val]) => {
+                const el1 = document.getElementById(hudId);
+                const el2 = document.getElementById(modalId);
+                if (el1) el1.textContent = val;
+                if (el2) el2.textContent = val;
+            });
+
+            // Temperature Bar
+            const tempVal = Math.round(state.grillTemp);
+            const tempBar = document.getElementById('hud-temp-bar');
+            const tempText = document.getElementById('hud-temp-text');
+            tempBar.style.width = `${tempVal}%`;
+            if (tempVal < 50) {
+                tempText.textContent = `${tempVal}% (Redup - Kipasi!)`;
+                tempText.className = 'font-extrabold text-slate-400';
+            } else if (tempVal <= 90) {
+                tempText.textContent = `${tempVal}% (Panas Ideal)`;
+                tempText.className = 'font-extrabold text-orange-400';
+            } else {
+                tempText.textContent = `${tempVal}% (Sangat Panas!)`;
+                tempText.className = 'font-extrabold text-red-400';
+            }
+        }
+
+        function startGame() {
+            audio.init();
+            audio.playCashRegister();
+            state.started = true;
+            const overlay = document.getElementById('start-overlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+
+            updateHUD();
+            updatePlateUI();
+            createCustomerNPC();
+            showFloatingToast('Selamat Jualan Juragan! Taruh Sate ke Panggangan & Kipasi Bara.', 'text-amber-300');
+        }
+
+        /********************************************************************
+         * 14. MAIN SIMULATION & 3D RENDER LOOP (60 FPS)
+         ********************************************************************/
+        const clock = new THREE.Clock();
+        const tempProjVec = new THREE.Vector3();
+
+        function getMeatColor(type, cookValue) {
+            const rawColor = type === 'ayam' ? new THREE.Color(0xfda4af) : new THREE.Color(0xbe123c);
+            const cookedColor = type === 'ayam' ? new THREE.Color(0xb45309) : new THREE.Color(0x5c240e);
+            const burntColor = new THREE.Color(0x18181b);
+
+            if (cookValue <= 100) {
+                return rawColor.clone().lerp(cookedColor, cookValue / 100);
+            } else {
+                const burntRatio = Math.min(1, (cookValue - 100) / 70);
+                return cookedColor.clone().lerp(burntColor, burntRatio);
+            }
+        }
+
+        function updateDayNightCycle(dt) {
+            if (!state.started) return;
+            state.timeMinutes += dt * 2.2; // 1 game hour every ~27 seconds
+            if (state.timeMinutes >= 24 * 60) {
+                state.timeMinutes -= 24 * 60;
+                state.day++;
+            }
+
+            const hours = Math.floor(state.timeMinutes / 60);
+            const mins = Math.floor(state.timeMinutes % 60);
+            const timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')} WIB`;
+            document.getElementById('hud-clock').textContent = timeStr;
+
+            const isNight = hours >= 18 || hours < 5;
+            document.getElementById('hud-day').textContent = `Hari ${state.day} • ${isNight ? 'Malam' : 'Sore'}`;
+            document.getElementById('hud-time-icon').className = isNight
+                ? 'fa-solid fa-moon text-lg text-amber-300'
+                : 'fa-solid fa-cloud-sun text-lg text-amber-400';
+
+            // Smooth transition between Sore (17:00) and Malam (18:30+)
+            let nightFactor = 0;
+            if (hours === 17) {
+                nightFactor = mins / 60;
+            } else if (hours >= 18 || hours < 5) {
+                nightFactor = 1;
+            }
+
+            const duskSky = new THREE.Color(0x3b2d4a);
+            const nightSky = new THREE.Color(0x090d16);
+            scene.background.copy(duskSky).lerp(nightSky, nightFactor);
+            scene.fog.color.copy(scene.background);
+
+            sunLight.intensity = THREE.MathUtils.lerp(1.1, 0.12, nightFactor);
+            ambientLight.intensity = THREE.MathUtils.lerp(0.65, 0.28, nightFactor);
+
+            // Warm hanging cart bulb glows brighter at night
+            cartBulbLight.intensity = THREE.MathUtils.lerp(1.2, 2.6, nightFactor) + Math.sin(clock.elapsedTime * 18) * 0.03;
+            bulbHaloMat.opacity = THREE.MathUtils.lerp(0.45, 0.95, nightFactor);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.1);
+            const elapsed = clock.getElapsedTime();
+
+            // 1. Update Camera Smooth Interpolation
+            const desiredPos = camControl.targetPos.clone().add(camControl.orbitOffset);
+            camControl.currentPos.lerp(desiredPos, 0.08);
+            camControl.currentLook.lerp(camControl.targetLook, 0.08);
+            camera.position.copy(camControl.currentPos);
+            camera.lookAt(camControl.currentLook);
+
+            // 2. Update Day/Night Cycle
+            updateDayNightCycle(dt);
+
+            // 3. Grill Temperature & Charcoal Glow Physics
+            if (state.started) {
+                if (state.isFanning) {
+                    state.grillTemp = Math.min(100, state.grillTemp + dt * 26);
+                } else if (state.upgrades.electricFan) {
+                    // Electric fan automatically stabilizes grill temperature around 80%
+                    const targetAutoTemp = 80;
+                    state.grillTemp += (targetAutoTemp - state.grillTemp) * dt * 2.5;
+                } else {
+                    state.grillTemp = Math.max(22, state.grillTemp - dt * 5.2);
+                }
+                updateHUD();
+            }
+
+            // Animate Bamboo Fan & Electric Fan
+            if (state.isFanning) {
+                state.fanSwingPhase += dt * 18;
+                bambooFanGroup.rotation.x = -0.35 + Math.sin(state.fanSwingPhase) * 0.55;
+                bambooFanGroup.position.y = 1.38 + Math.cos(state.fanSwingPhase) * 0.04;
+            } else {
+                bambooFanGroup.rotation.x = THREE.MathUtils.lerp(bambooFanGroup.rotation.x, -0.35, 0.15);
+            }
+
+            if (state.upgrades.electricFan) {
+                fanRotor.rotation.x += dt * 22;
+            }
+
+            // Charcoal Emissive Glow
+            const tempRatio = state.grillTemp / 100;
+            charcoalLight.intensity = 0.6 + tempRatio * 2.2 + Math.sin(elapsed * 12) * 0.12;
+            charcoalChunks.forEach((chunk, idx) => {
+                chunk.material.emissiveIntensity = 0.25 + tempRatio * 1.45 + Math.sin(elapsed * 8 + idx) * 0.15;
+            });
+
+            // 4. Satay Cooking Simulation & 3D Floating Slot Badges
+            let activeSatayCount = 0;
+            state.grillSlots.forEach((slot) => {
+                if (!slot.occupied || !slot.mesh) return;
+                activeSatayCount++;
+
+                // Smooth flip rotation
+                slot.mesh.rotation.z = THREE.MathUtils.lerp(slot.mesh.rotation.z, slot.flipTargetRotZ, 0.18);
+
+                // Increase cook progress on the side facing the hot charcoal
+                const cookSpeed = (state.grillTemp / 72) * 14.5 * dt;
+                if (slot.currentSide === 'A') {
+                    slot.sideA = Math.min(180, slot.sideA + cookSpeed);
+                } else {
+                    slot.sideB = Math.min(180, slot.sideB + cookSpeed);
+                }
+
+                // Update meat color & glossy oil sheen as it caramelizes
+                const avgCook = (slot.sideA + slot.sideB) / 2;
+                const meatCol = getMeatColor(slot.type, avgCook);
+                const oilGlossRoughness = avgCook >= 70 && avgCook <= 135 ? 0.18 : 0.55;
+
+                slot.meatMeshes.forEach((m) => {
+                    if (!m.isFatCube) {
+                        m.mesh.material.color.copy(meatCol);
+                    }
+                    m.mesh.material.roughness = oilGlossRoughness;
+                });
+
+                // Project 3D position to 2D screen coordinates for floating status bar
+                slot.mesh.getWorldPosition(tempProjVec);
+                tempProjVec.y += 0.16;
+                tempProjVec.project(camera);
+
+                const sx = (tempProjVec.x * 0.5 + 0.5) * window.innerWidth;
+                const sy = (-tempProjVec.y * 0.5 + 0.5) * window.innerHeight;
+                slot.labelEl.style.left = `${sx}px`;
+                slot.labelEl.style.top = `${sy}px`;
+
+                const barA = slot.labelEl.querySelector('.slot-bar-a');
+                const barB = slot.labelEl.querySelector('.slot-bar-b');
+                const titleEl = slot.labelEl.querySelector('.slot-title');
+
+                barA.style.width = `${Math.min(100, slot.sideA)}%`;
+                barB.style.width = `${Math.min(100, slot.sideB)}%`;
+
+                barA.className = `slot-bar-a h-full ${slot.sideA > 140 ? 'bg-red-600' : (slot.sideA >= 75 ? 'bg-emerald-400' : 'bg-amber-400')}`;
+                barB.className = `slot-bar-b h-full ${slot.sideB > 140 ? 'bg-red-600' : (slot.sideB >= 75 ? 'bg-emerald-400' : 'bg-amber-400')}`;
+
+                if (slot.sideA > 140 || slot.sideB > 140) {
+                    titleEl.textContent = 'GOSONG!';
+                    titleEl.className = 'font-extrabold text-red-400 slot-title animate-bounce';
+                } else if (slot.sideA >= 75 && slot.sideB >= 75) {
+                    titleEl.textContent = 'MATANG PAS!';
+                    titleEl.className = 'font-extrabold text-emerald-400 slot-title';
+                } else {
+                    titleEl.textContent = `${slot.type === 'ayam' ? 'Ayam' : 'Kambing'} (Sisi ${slot.currentSide})`;
+                    titleEl.className = 'font-extrabold text-amber-300 slot-title';
+                }
+            });
+
+            // Update Procedural Sizzle Audio
+            audio.updateSizzle(activeSatayCount, state.grillTemp, state.isFanning);
+
+            // 5. Spawn & Update Smoke + Ember Particles
+            const smokeChance = (activeSatayCount * 0.22 + 0.12) * (state.isFanning ? 2.4 : 1.0);
+            if (Math.random() < smokeChance) spawnSmokeParticle();
+            if ((state.isFanning || state.grillTemp > 75) && Math.random() < 0.35) spawnEmberParticle();
+
+            for (let i = smokeParticles.length - 1; i >= 0; i--) {
+                const sp = smokeParticles[i];
+                sp.age += dt;
+                if (sp.age >= sp.maxAge) {
+                    scene.remove(sp.mesh);
+                    smokeParticles.splice(i, 1);
+                    continue;
+                }
+                sp.mesh.position.x += sp.vx * dt;
+                sp.mesh.position.y += sp.vy * dt;
+                sp.mesh.position.z += sp.vz * dt;
+                const progress = sp.age / sp.maxAge;
+                const scale = 1.0 + progress * 3.2;
+                sp.mesh.scale.set(scale, scale, scale);
+                sp.mesh.material.opacity = 0.36 * (1 - progress);
+            }
+
+            for (let i = emberParticles.length - 1; i >= 0; i--) {
+                const ep = emberParticles[i];
+                ep.age += dt;
+                if (ep.age >= ep.maxAge) {
+                    scene.remove(ep.mesh);
+                    emberParticles.splice(i, 1);
+                    continue;
+                }
+                ep.mesh.position.x += ep.vx * dt;
+                ep.mesh.position.y += ep.vy * dt;
+                ep.mesh.position.z += ep.vz * dt;
+            }
+
+            // 6. Update NPC Customer Queue & Patience Timer
+            if (state.started) {
+                state.spawnCooldown -= dt;
+                const maxQueue = state.upgrades.neonSign ? 4 : 3;
+                if (state.spawnCooldown <= 0 && state.customers.length < maxQueue) {
+                    createCustomerNPC();
+                    state.spawnCooldown = state.upgrades.neonSign ? 9.0 : 13.0;
+                }
+
+                state.customers.forEach((cust, idx) => {
+                    const targetX = -0.15 - idx * 0.95;
+                    const dist = targetX - cust.mesh.position.x;
+                    if (Math.abs(dist) > 0.05) {
+                        cust.mesh.position.x += Math.sign(dist) * dt * 2.1;
+                        cust.walkPhase += dt * 10;
+                        cust.mesh.position.y = 0.18 + Math.abs(Math.sin(cust.walkPhase)) * 0.06;
+                        cust.mesh.rotation.y = Math.PI / 2;
+                    } else {
+                        cust.mesh.position.y = 0.18;
+                        cust.mesh.rotation.y = 0; // Face the satay cart
+                        // Front customer loses patience slowly
+                        if (idx === 0) {
+                            cust.patience = Math.max(0, cust.patience - dt);
+                            const pct = Math.round((cust.patience / cust.maxPatience) * 100);
+                            const patBar = document.getElementById('patience-bar');
+                            const patTxt = document.getElementById('patience-text');
+                            if (patBar && patTxt) {
+                                patBar.style.width = `${pct}%`;
+                                patTxt.textContent = `${pct}%`;
+                                patBar.className = `h-full transition-all duration-200 ${pct > 50 ? 'bg-emerald-500' : (pct > 25 ? 'bg-amber-500' : 'bg-rose-600')}`;
+                            }
+                            if (cust.patience <= 0) {
+                                audio.playError();
+                                showFloatingToast(`${cust.name} pergi karena kelamaan menunggu!`, 'text-rose-400');
+                                scene.remove(cust.mesh);
+                                state.customers.shift();
+                                state.rating = Math.max(1.0, Number((state.rating - 0.2).toFixed(1)));
+                                updateOrderUI();
+                                updateHUD();
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 7. Passing Street Vehicles
+            passingVehicles.forEach((v) => {
+                v.mesh.position.x += v.speed * dt;
+                if (v.speed > 0 && v.mesh.position.x > 26) v.mesh.position.x = -26;
+                if (v.speed < 0 && v.mesh.position.x < -26) v.mesh.position.x = 26;
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        window.onload = function () {
+            animate();
+        };
+    </script>
+</body>
+</html>
