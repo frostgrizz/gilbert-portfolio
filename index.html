@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101323">
+  <meta name="description" content="Gilbert Evan Arkananta — pelajar SMA Negeri 1 Klaten yang tertarik pada web development, creative coding, Google Apps Script, dan membangun karya digital yang bermanfaat.">
+  <meta property="og:title" content="Gilbert Evan Arkananta — Digital Portfolio">
+  <meta property="og:description" content="From curiosity to things that work. A personal space for learning, building, and exploring digital experiences.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/gilbert-portrait.webp">
+  <title>Gilbert Evan Arkananta — Digital Portfolio</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#home">Lewati intro</a>
+
+  <!-- A short loading interlude before the cinematic entrance. -->
+  <div class="preloader" id="preloader" aria-label="Memuat portofolio">
+    <div class="preloader-grain"></div>
+    <div class="loader-top"><span class="loader-mark">G<span>.</span></span><span>PERSONAL DIGITAL SPACE</span></div>
+    <div class="loader-center">
+      <div class="loader-orbit"><i></i><b></b><span></span></div>
+      <p>PREPARING THE JOURNEY</p>
+      <h1>Something is<br><em>taking shape.</em></h1>
+      <div class="loader-track"><span id="loaderBar"></span></div>
+      <div class="loader-meta"><span id="loaderStatus">Gathering the pieces</span><strong id="loaderPercent">00%</strong></div>
+    </div>
+    <div class="loader-bottom"><span>GILBERT EVAN ARKANANTA</span><span>KLATEN · INDONESIA</span></div>
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor-glow" aria-hidden="true"></div>
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="page-progress" aria-hidden="true"><span id="pageProgress"></span></div>
+
+  <!-- CINEMATIC ENTRY: scroll through the campfire photograph to enter the portfolio. -->
+  <section class="opening-track" id="opening" aria-label="Pembuka sinematik. Gulir ke bawah untuk memasuki portofolio.">
+    <div class="opening-sticky" id="openingSticky">
+      <div class="opening-backdrop" id="openingBackdrop"></div>
+      <img class="opening-portrait" id="openingPortrait" src="assets/gilbert-portrait.webp" alt="Siluet Gilbert dalam suasana malam dengan cahaya hangat" fetchpriority="high">
+      <div class="opening-shade"></div>
+      <div class="opening-vignette"></div>
+      <div class="opening-stars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="opening-top"><span class="opening-brand">G<span>.</span> / GILBERT EVAN ARKANANTA</span><span>AN OPEN NOTEBOOK OF IDEAS <b>·</b> 2026</span></div>
+      <div class="opening-copy" id="openingCopy">
+        <p class="opening-kicker"><i></i> A PERSONAL DIGITAL JOURNEY</p>
+        <h1>Every journey<br>starts with a<br><em>little curiosity.</em></h1>
+        <p class="opening-desc">Dari rasa ingin tahu, tumbuh keinginan untuk mencoba. Dari mencoba, lahir sesuatu yang bisa dibangun.</p>
+      </div>
+      <div class="opening-bottom" id="openingBottom">
+        <div class="opening-location"><small>FIELD NOTE / 001</small><strong>Klaten, Indonesia</strong></div>
+        <div class="opening-scroll-prompt"><span class="scroll-ring"><i></i></span><span><strong>SCROLL TO ENTER</strong><small>Gulir perlahan untuk memulai perjalanan</small></span></div>
+        <div class="opening-counter"><strong id="openingPercent">00</strong><small> / 100</small></div>
+      </div>
+      <div class="opening-enter" id="openingEnter"><span>WELCOME TO MY DIGITAL SPACE</span><i>↓</i></div>
+      <a class="skip-opening" href="#home">SKIP INTRO <span>↗</span></a>
+      <div class="opening-flare" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <header class="site-header" id="siteHeader">
+    <a class="site-brand" href="#home" aria-label="Gilbert, beranda"><span class="brand-icon" aria-hidden="true">G</span><span><strong>GILBERT EVAN</strong><small>DIGITAL PORTFOLIO</small></span></a>
+    <nav class="main-nav" id="mainNav" aria-label="Navigasi utama">
+      <a class="nav-link active" href="#home">Beranda</a>
+      <a class="nav-link" href="#about">Profil</a>
+      <a class="nav-link" href="#explore">Eksplorasi</a>
+      <a class="nav-link" href="#works">Karya</a>
+      <a class="nav-link" href="#journey">Perjalanan</a>
+      <a class="nav-link" href="#lab">Lab</a>
+    </nav>
+    <a class="header-contact" href="#contact">Mari terhubung <span>↗</span></a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Buka navigasi" aria-expanded="false"><i></i><i></i></button>
+  </header>
+
+  <main id="main">
+    <!-- HERO: the lanyard is intentionally draggable on desktop and touch devices. -->
+    <section class="hero contour-surface contour-light" id="home">
+      <div class="hero-orb hero-orb-one"></div><div class="hero-orb hero-orb-two"></div>
+      <div class="hero-grid"></div>
+      <div class="hero-shell">
+        <div class="hero-copy">
+          <p class="eyebrow reveal"><span class="eyebrow-dot"></span> HALO, SAYA EVAN <span class="eyebrow-year">— 2026</span></p>
+          <h2 class="hero-title reveal">Mengubah rasa<br>penasaran menjadi<br><em>karya digital.</em></h2>
+          <p class="hero-lead reveal">Saya seorang pelajar yang senang mengeksplorasi teknologi, terutama pengembangan web. Saya menikmati proses menyusun ide, merancang pengalaman, menulis kode, lalu melihat semuanya bekerja menjadi sesuatu yang nyata.</p>
+          <div class="hero-actions reveal">
+            <a class="button button-dark magnetic" href="#works"><span>Jelajahi karya</span><b>↘</b></a>
+            <a class="text-link" href="#about">Kenali saya <span>↓</span></a>
+          </div>
+          <div class="hero-note reveal"><span class="note-line"></span><span>LEARNING BY MAKING · BUILDING WITH CURIOSITY</span></div>
+        </div>
+
+        <div class="lanyard-area reveal" id="lanyardArea">
+          <div class="lanyard-halo"></div>
+          <div class="lanyard-rig" id="lanyardRig">
+            <svg class="lanyard-cord" id="lanyardCord" viewBox="0 0 360 500" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="lanyardGradient" x1="0" x2="1"><stop offset="0" stop-color="#2c4fc8"/><stop offset=".5" stop-color="#7d9cff"/><stop offset="1" stop-color="#385bd1"/></linearGradient></defs><path id="lanyardCordPath" d="M180 0 C180 58 180 82 180 118"></path></svg>
+            <div class="lanyard-ribbon" id="lanyardRibbon"><span>GILBERT EVAN · CREATIVE EXPLORER · GILBERT EVAN ·</span></div>
+            <div class="lanyard-clip" aria-hidden="true"><i></i><b></b></div>
+            <div class="identity-card" id="identityCard" role="group" aria-label="Kartu identitas Evan. Tekan dan seret kartu ke mana saja di layar.">
+              <div class="id-card-top"><span>PERSONAL IDENTITY</span><b>GEA / 001</b></div>
+              <div class="id-card-hole"></div>
+              <div class="id-card-photo"><img src="assets/gilbert-portrait.webp" alt="Foto siluet Gilbert dalam suasana malam" draggable="false"><span class="id-photo-mark">G<span>.</span></span></div>
+              <div class="id-card-name">GILBERT EVAN<br>ARKANANTA</div>
+              <div class="id-card-role">STUDENT · DIGITAL EXPLORER</div>
+              <div class="id-card-rule"></div>
+              <div class="id-card-foot"><span>SMA NEGERI 1 KLATEN</span><span>✳ 001</span></div>
+              <div class="id-card-shine"></div>
+            </div>
+          </div>
+          <div class="drag-hint" id="dragHint"><span class="drag-icon">✣</span><span><strong>DRAG THE ID</strong><small>Tekan lalu seret ke mana saja</small></span><span class="drag-arrow">↗</span></div>
+          <div class="lanyard-caption">A SMALL CARD, A BIGGER JOURNEY <span>✳</span></div>
+        </div>
+      </div>
+      <div class="hero-bottomline"><span><b>BASED IN</b> Klaten, Central Java</span><span><b>CURRENT MODE</b> Learning by making</span><a href="#about">SCROLL TO EXPLORE <i>↓</i></a></div>
+      <div class="hero-side-label">PERSONAL ARCHIVE / 001—∞</div>
+    </section>
+
+    <div class="ticker" aria-label="Bidang yang sedang saya eksplorasi"><div class="ticker-track">
+      <span>WEB DEVELOPMENT</span><b>✳</b><span>CREATIVE CODING</span><b>✳</b><span>GOOGLE APPS SCRIPT</span><b>✳</b><span>GOOGLE SHEETS</span><b>✳</b><span>INTERACTIVE EXPERIENCES</span><b>✳</b>
+      <span>WEB DEVELOPMENT</span><b>✳</b><span>CREATIVE CODING</span><b>✳</b><span>GOOGLE APPS SCRIPT</span><b>✳</b><span>GOOGLE SHEETS</span><b>✳</b><span>INTERACTIVE EXPERIENCES</span><b>✳</b>
+    </div></div>
+
+    <!-- ABOUT -->
+    <section class="about-section paper-section section-pad contour-surface contour-light" id="about">
+      <div class="about-campus-art" aria-hidden="true">
+        <img src="assets/sman1-klaten-photo.webp" alt="" loading="lazy">
+        <span>SMAN 1 KLATEN <i>·</i> WHERE THE JOURNEY GROWS</span>
+      </div>
+      <div class="section-shell">
+        <div class="section-heading reveal"><span class="section-index">01 / ABOUT ME</span><span class="section-aside">A LITTLE CONTEXT BEHIND THE CODE</span></div>
+        <div class="about-grid">
+          <div class="about-head reveal"><p class="mini-label">THE PERSON BEHIND THE SCREEN</p><h2>Halo, saya<br><em>Evan.</em></h2><div class="about-stamp">GEA<br><span>2026</span></div></div>
+          <div class="about-text reveal delay-1">
+            <p class="about-big">Saya percaya teknologi menjadi menarik ketika kita bisa menggunakannya untuk mewujudkan ide dan membantu menyelesaikan kebutuhan nyata.</p>
+            <p>Nama saya <strong>Gilbert Evan Arkananta</strong>, pelajar di <strong>SMA Negeri 1 Klaten</strong>. Saya memiliki ketertarikan pada dunia teknologi, khususnya web development, desain antarmuka, dan proses kreatif di balik sebuah produk digital.</p>
+            <p>Ketertarikan itu mulai tumbuh ketika saya mengikuti ekstrakurikuler <strong>SECURE</strong>, khususnya di divisi <strong>Production</strong>. Dari pengalaman tersebut, saya semakin menikmati proses berkarya menggunakan teknologi dan mulai tertarik mendalami coding, terutama dalam pembuatan website.</p>
+            <p>Saya terbiasa mengeksplorasi Google Apps Script dan Google Sheets untuk mendukung kebutuhan proyek. Di luar itu, saya juga sesekali mencoba membuat game sebagai ruang eksperimen dan bersenang-senang dengan coding.</p>
+            <a class="inline-link" href="https://www.instagram.com/gilbertevanarkananta/" target="_blank" rel="noopener noreferrer">Lebih dekat dengan saya <span>↗</span></a>
+          </div>
+        </div>
+        <div class="profile-facts">
+          <article class="profile-fact reveal"><span class="fact-no">01</span><span class="fact-label">EDUCATION</span><strong>SMA Negeri 1 Klaten</strong><small>Klaten, Jawa Tengah</small></article>
+          <article class="profile-fact reveal delay-1"><span class="fact-no">02</span><span class="fact-label">EXTRACURRICULAR</span><strong>SECURE · Production</strong><small>Ruang awal bertumbuh dan berkarya</small></article>
+          <article class="profile-fact reveal delay-2"><span class="fact-no">03</span><span class="fact-label">PERSONAL APPROACH</span><strong>Learn by building</strong><small>Mencoba, memahami, memperbaiki</small></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPLORATION DOMAINS -->
+    <section class="explore-section section-pad contour-surface contour-light" id="explore">
+      <div class="section-shell">
+        <div class="section-heading reveal"><span class="section-index">02 / WHAT I EXPLORE</span><span class="section-aside">AREAS OF CURIOSITY</span></div>
+        <div class="explore-intro reveal"><h2>Empat ruang<br>untuk <em>bertumbuh.</em></h2><p>Bidang-bidang yang paling sering saya sentuh dan ingin terus saya dalami. Bukan batas kemampuan, melainkan ruang untuk mencoba lebih jauh.</p></div>
+        <div class="explore-grid">
+          <article class="explore-card explore-blue reveal"><div class="explore-card-top"><span>01 / WEB</span><span class="explore-symbol">⌘</span></div><div class="explore-art web-art"><div class="browser-mini"><div class="browser-bar"><i></i><i></i><i></i><span></span></div><div class="browser-layout"><b></b><i></i><i></i><em></em></div></div><span class="art-orbit orbit-a"></span><span class="art-orbit orbit-b"></span></div><div class="explore-card-copy"><h3>Web Development</h3><p>Membangun website yang responsif dan interaktif, dari menyusun struktur halaman hingga menghubungkan fungsi yang dibutuhkan pengguna.</p><div class="tag-row"><span>HTML</span><span>CSS</span><span>JavaScript</span></div></div></article>
+          <article class="explore-card explore-yellow reveal delay-1"><div class="explore-card-top"><span>02 / AUTOMATION</span><span class="explore-symbol">↗</span></div><div class="explore-art automation-art"><div class="sheet-card"><div class="sheet-head"><i></i><i></i><i></i><b>Sheets</b></div><div class="sheet-grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="script-chip">Apps Script <b>{ }</b></div></div><div class="explore-card-copy"><h3>Digital Productivity</h3><p>Menghubungkan website dengan data dan alur kerja menggunakan Google Apps Script serta Google Sheets.</p><div class="tag-row"><span>Apps Script</span><span>Sheets</span><span>Workflow</span></div></div></article>
+          <article class="explore-card explore-lilac reveal"><div class="explore-card-top"><span>03 / CREATIVE CODE</span><span class="explore-symbol">✳</span></div><div class="explore-art creative-art"><div class="creative-window"><span>const idea =</span><strong>curiosity<span>;</span></strong><i>function build() { }</i></div><div class="creative-cube"></div><span class="creative-spark">✦</span></div><div class="explore-card-copy"><h3>Creative Coding</h3><p>Mengeksplorasi bagaimana kode bisa menjadi medium untuk menciptakan visual, gerakan, dan pengalaman yang lebih ekspresif.</p><div class="tag-row"><span>JavaScript</span><span>Animation</span><span>Interaction</span></div></div></article>
+          <article class="explore-card explore-mint reveal delay-1"><div class="explore-card-top"><span>04 / GAME</span><span class="explore-symbol">◈</span></div><div class="explore-art game-art"><div class="game-screen"><div class="game-sun"></div><div class="game-hill hill-one"></div><div class="game-hill hill-two"></div><span>PLAY / EXPERIMENT</span></div><div class="game-pad">✣</div></div><div class="explore-card-copy"><h3>Game & Interaction</h3><p>Sesekali membuat game kecil untuk mencoba mekanik, interaksi, dan logika program dalam bentuk yang menyenangkan.</p><div class="tag-row"><span>Game Logic</span><span>Three.js</span><span>Experiment</span></div></div></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROCESS SCROLL STORY -->
+    <section class="process-track contour-surface contour-dark" id="process" aria-label="Proses membangun karya dari ide sampai dapat digunakan">
+      <div class="process-sticky" id="processSticky">
+        <div class="process-grid-bg"></div><div class="process-glow"></div>
+        <div class="process-top"><span>03 / FROM THOUGHT TO FORM</span><span>SCROLL TO BUILD <b>↓</b></span></div>
+        <div class="process-layout">
+          <div class="process-copy">
+            <p class="process-eyebrow">THE MAKING OF AN IDEA</p>
+            <h2 id="processTitle">Everything<br>starts with<br><em>a question.</em></h2>
+            <p id="processDescription">Rasa penasaran menjadi pemantik. Ada hal yang ingin dicoba, kebutuhan yang ingin dipahami, atau ide yang ingin diwujudkan.</p>
+            <div class="process-readout"><strong id="processStep">01</strong><span>/ 04</span><div class="process-progress"><i id="processStepFill"></i></div></div>
+            <div class="process-footnote">A THOUGHT IS ONLY THE BEGINNING.</div>
+          </div>
+          <div class="assembly-stage" id="assemblyStage" data-step="0">
+            <div class="assembly-stage-head"><span>WORKSPACE / GEA</span><span id="assemblyMode">MODE: IDEA</span></div>
+            <svg class="assembly-wires" viewBox="0 0 720 560" preserveAspectRatio="none" aria-hidden="true"><path id="wireOne" d="M85 112 C210 112 180 265 325 265 S470 135 655 135"/><path id="wireTwo" d="M90 440 C235 440 210 350 365 350 S520 435 650 410"/><path id="wireThree" d="M360 34 L360 190 L535 190 L535 345"/><circle cx="325" cy="265" r="4"/><circle cx="535" cy="190" r="4"/></svg>
+            <div class="assembly-node node-idea"><span>01</span><b>IDEA</b><small>THE SPARK</small></div>
+            <div class="assembly-node node-plan"><span>02</span><b>STRUCTURE</b><small>GIVE IT A SHAPE</small></div>
+            <div class="assembly-node node-code"><span>03</span><b>BUILD</b><small>MAKE IT WORK</small></div>
+            <div class="assembly-node node-live"><span>04</span><b>LIVE</b><small>READY TO EXPLORE</small></div>
+            <div class="assembly-window window-code"><div class="window-bar"><i></i><i></i><i></i><span>idea.js</span></div><div class="code-lines"><i><b>const</b> idea = <em>"curiosity"</em>;</i><i><b>function</b> <strong>build</strong>() {</i><i class="indent">design();</i><i class="indent">develop();</i><i class="indent">improve();</i><i>}</i></div></div>
+            <div class="assembly-window window-ui"><div class="window-bar"><i></i><i></i><i></i><span>preview / live</span></div><div class="ui-preview"><div class="ui-preview-nav"></div><div class="ui-preview-title"></div><div class="ui-preview-row"><i></i><i></i><i></i></div><div class="ui-preview-cta"></div></div></div>
+            <div class="assembly-orbit orbit-one"></div><div class="assembly-orbit orbit-two"></div>
+            <div class="assembly-stage-foot"><span>BUILD · TEST · LEARN · REPEAT</span><span id="assemblyPercent">00%</span></div>
+          </div>
+        </div>
+        <div class="process-bottom"><span>ONE STEP AT A TIME</span><span>CURIOUS BY NATURE <b>✳</b></span></div>
+      </div>
+    </section>
+
+    <!-- TOOLKIT / INTERACTIVE SKILL CONSTELLATION -->
+    <section class="toolkit-section section-pad" id="toolkit">
+      <div class="toolkit-contours" aria-hidden="true"></div>
+      <div class="toolkit-shell">
+        <div class="section-heading toolkit-section-heading reveal"><span class="section-index">04 / MY DIGITAL TOOLKIT</span><span class="section-aside">TOOLS ARE PART OF THE PROCESS</span></div>
+        <div class="toolkit-header reveal">
+          <div><p class="toolkit-overline">A SMALL SET OF TOOLS, MANY POSSIBILITIES</p><h2>Belajar alatnya.<br><em>Bangun idenya.</em></h2></div>
+          <p>Teknologi yang saya gunakan untuk merangkai tampilan, menghubungkan data, membuat interaksi, dan mencoba hal-hal baru. Pilih salah satu untuk melihat bagaimana alat tersebut masuk ke proses berkarya.</p>
+        </div>
+        <div class="toolkit-showcase">
+          <div class="toolkit-selectors" role="group" aria-label="Pilih teknologi untuk melihat detail">
+            <button class="tool-card is-active" type="button" data-tool="html" data-kicker="01 / STRUCTURE" data-title="HTML" data-detail="HTML menjadi kerangka dari halaman yang saya bangun. Saya menggunakannya untuk menyusun konten, navigasi, formulir, dan komponen agar informasi mudah dipahami." data-application="Struktur halaman portofolio dan XBLARBLARR" aria-pressed="true">
+              <span class="tool-card-orb orb-html"><b>5</b><i></i></span><span class="tool-card-copy"><small>01 / STRUCTURE</small><strong>HTML</strong><em>Menyusun kerangka pengalaman.</em></span><span class="tool-card-arrow">↗</span>
+            </button>
+            <button class="tool-card" type="button" data-tool="css" data-kicker="02 / VISUAL" data-title="CSS" data-detail="CSS membantu saya membentuk suasana dan hierarki visual. Mulai dari layout responsif, warna, tipografi, sampai animasi kecil yang membuat website terasa lebih hidup." data-application="Layout, responsivitas, dan motion pada portofolio" aria-pressed="false">
+              <span class="tool-card-orb orb-css"><b>✳</b><i></i></span><span class="tool-card-copy"><small>02 / VISUAL</small><strong>CSS</strong><em>Memberi bentuk pada ide.</em></span><span class="tool-card-arrow">↗</span>
+            </button>
+            <button class="tool-card" type="button" data-tool="javascript" data-kicker="03 / INTERACTION" data-title="JavaScript" data-detail="JavaScript menjadi bagian penting ketika halaman perlu merespons tindakan pengguna. Saya menggunakannya untuk logika fitur, interaksi, navigasi, dan eksperimen kreatif." data-application="Interaksi UI, fitur dashboard, dan mini lab" aria-pressed="false">
+              <span class="tool-card-orb orb-js"><b>JS</b><i></i></span><span class="tool-card-copy"><small>03 / INTERACTION</small><strong>JavaScript</strong><em>Menghidupkan fungsi dan gerak.</em></span><span class="tool-card-arrow">↗</span>
+            </button>
+            <button class="tool-card" type="button" data-tool="apps-script" data-kicker="04 / AUTOMATION" data-title="Google Apps Script" data-detail="Google Apps Script saya eksplorasi untuk menghubungkan layanan Google dan membantu alur kerja proyek. Pendekatan ini berguna ketika website membutuhkan proses yang terhubung dengan layanan lain." data-application="Integrasi dan alur kerja XBLARBLARR" aria-pressed="false">
+              <span class="tool-card-orb orb-gas"><b>{ }</b><i></i></span><span class="tool-card-copy"><small>04 / AUTOMATION</small><strong>Apps Script</strong><em>Menghubungkan layanan Google.</em></span><span class="tool-card-arrow">↗</span>
+            </button>
+            <button class="tool-card" type="button" data-tool="sheets" data-kicker="05 / DATA" data-title="Google Sheets" data-detail="Google Sheets saya gunakan sebagai alat pengelolaan data yang praktis untuk kebutuhan proyek. Data yang rapi membantu fitur dan informasi kelas lebih mudah dikelola." data-application="Pengelolaan data untuk website kelas" aria-pressed="false">
+              <span class="tool-card-orb orb-sheets"><b>▦</b><i></i></span><span class="tool-card-copy"><small>05 / DATA</small><strong>Google Sheets</strong><em>Mengatur data agar berguna.</em></span><span class="tool-card-arrow">↗</span>
+            </button>
+            <button class="tool-card" type="button" data-tool="three" data-kicker="06 / 3D EXPERIMENT" data-title="Three.js" data-detail="Three.js saya gunakan untuk bereksperimen dengan objek, pencahayaan, dan lingkungan 3D di browser. Salah satu penerapannya adalah eksperimen game simulasi Sate Master 3D." data-application="Eksperimen game Sate Master 3D" aria-pressed="false">
+              <span class="tool-card-orb orb-three"><b>◇</b><i></i></span><span class="tool-card-copy"><small>06 / 3D EXPERIMENT</small><strong>Three.js</strong><em>Menjelajahi ruang tiga dimensi.</em></span><span class="tool-card-arrow">↗</span>
+            </button>
+          </div>
+          <aside class="toolkit-focus" id="toolkitFocus" aria-live="polite">
+            <div class="toolkit-focus-top"><span>SELECTED TOOL / <b id="toolFocusNo">01</b></span><span class="focus-pulse"><i></i> EXPLORING</span></div>
+            <div class="tool-focus-stage" id="toolFocusStage"><div class="focus-orbit focus-orbit-a"></div><div class="focus-orbit focus-orbit-b"></div><div class="focus-bubble" id="toolFocusBubble"><span id="toolFocusSymbol">5</span></div><div class="focus-spark focus-spark-a">✳</div><div class="focus-spark focus-spark-b">✦</div><div class="focus-grid-mark">GEA<br>TOOLKIT</div></div>
+            <div class="toolkit-focus-copy"><p id="toolFocusKicker">01 / STRUCTURE</p><h3 id="toolFocusTitle">HTML</h3><p id="toolFocusDetail">HTML menjadi kerangka dari halaman yang saya bangun. Saya menggunakannya untuk menyusun konten, navigasi, formulir, dan komponen agar informasi mudah dipahami.</p><div class="toolkit-use"><span>USED IN / EXAMPLE</span><strong id="toolFocusApplication">Struktur halaman portofolio dan XBLARBLARR</strong></div></div>
+            <div class="toolkit-focus-bottom"><span>SELECT A TOOL TO EXPLORE</span><span>01 — 06 <b>✳</b></span></div>
+          </aside>
+        </div>
+        <p class="toolkit-note"><span>✳</span> Daftar ini menggambarkan teknologi yang pernah digunakan atau sedang dieksplorasi, bukan klaim tingkat kemahiran profesional.</p>
+      </div>
+    </section>
+
+    <!-- JOURNEY -->
+    <section class="journey-section section-pad contour-surface contour-dark" id="journey">
+      <div class="section-shell">
+        <div class="section-heading reveal"><span class="section-index">05 / MY JOURNEY</span><span class="section-aside">STILL LEARNING, STILL BUILDING</span></div>
+        <div class="journey-intro reveal"><h2>Perjalanan yang<br>masih <em>berjalan.</em></h2><p>Saya belum menganggap proses belajar ini selesai. Setiap pengalaman memberi alasan baru untuk memahami sesuatu lebih dalam dan mencoba hal yang belum pernah dibuat.</p></div>
+        <div class="journey-line">
+          <article class="journey-item reveal"><div class="journey-marker"><span>01</span></div><div class="journey-meta"><span>THE BEGINNING</span><i>SECURE / PRODUCTION</i></div><div class="journey-body"><h3>Menemukan ketertarikan.</h3><p>Melalui ekstrakurikuler SECURE di divisi Production, saya mulai menumbuhkan ketertarikan pada proses produksi digital. Dari lingkungan inilah rasa penasaran terhadap coding dan pembuatan website semakin berkembang.</p></div></article>
+          <article class="journey-item reveal"><div class="journey-marker"><span>02</span></div><div class="journey-meta"><span>BUILDING FOR PEOPLE</span><i>CLASS PROJECT</i></div><div class="journey-body"><h3>Membangun sesuatu yang berguna.</h3><p>Kebutuhan teman-teman kelas menjadi dorongan untuk membuat XBLARBLARR, sebuah website kelas yang membantu mengumpulkan berbagai informasi dan fitur dalam satu tempat.</p></div></article>
+          <article class="journey-item reveal"><div class="journey-marker"><span>03</span></div><div class="journey-meta"><span>PLAY & EXPERIMENT</span><i>CREATIVE CODING</i></div><div class="journey-body"><h3>Mencoba kemungkinan lain.</h3><p>Rasa ingin tahu kemudian membawa saya mencoba hal di luar website informatif, termasuk eksperimen game simulasi 3D yang menggabungkan visual, logika, dan interaksi.</p></div></article>
+          <article class="journey-item journey-current reveal"><div class="journey-marker"><span>04</span></div><div class="journey-meta"><span>NOW / IN PROGRESS</span><i>ALWAYS IMPROVING</i></div><div class="journey-body"><h3>Terus belajar dan menyempurnakan.</h3><p>Saat ini saya ingin memperkuat fondasi coding, meningkatkan kualitas pengalaman pengguna, dan terus mengembangkan ide menjadi karya yang semakin matang.</p></div></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="works-section section-pad contour-surface contour-dark" id="works">
+      <div class="section-shell">
+        <div class="section-heading reveal"><span class="section-index">06 / SELECTED WORKS</span><span class="section-aside">A FEW THINGS I HAVE BUILT</span></div>
+        <div class="works-intro reveal"><h2>Ide yang berubah<br>menjadi <em>karya.</em></h2><p>Dua proyek dengan tujuan yang berbeda: satu dibuat untuk kebutuhan nyata di lingkungan kelas, satu lagi lahir dari eksperimen dan rasa penasaran.</p></div>
+
+        <article class="project-card project-class reveal" id="xblarblarr">
+          <div class="project-topline"><span>PROJECT / 001</span><span>WEB APPLICATION · CLASS PLATFORM</span><span class="project-status"><i></i> LIVE WEBSITE</span></div>
+          <div class="project-layout">
+            <div class="project-copy"><p class="project-category">A DIGITAL SPACE FOR THE CLASS</p><h3>XBLAR<span>BLARR</span></h3><p class="project-description">Website kelas yang saya kembangkan untuk membantu seluruh siswa mengakses berbagai kebutuhan kelas melalui satu tempat. Bukan hanya halaman informasi, XBLARBLARR dirancang sebagai pusat aktivitas digital kelas.</p>
+              <div class="project-features"><div><b>01</b><span>Akademik: tugas, kuis, materi, jurnal, dan literasi</span></div><div><b>02</b><span>Operasional: jadwal, piket, absensi, dan tempat duduk</span></div><div><b>03</b><span>Komunitas: diskusi, menfess, uang kas, dan tim kelas</span></div><div><b>04</b><span>Ruang interaktif: game, galeri, photobooth, dan spinner kelompok</span></div></div>
+              <div class="project-tags"><span>HTML / CSS / JS</span><span>Google Apps Script</span><span>Google Sheets</span></div>
+              <a class="project-link" href="https://xblarblarr.web.id" target="_blank" rel="noopener noreferrer"><span>Jelajahi XBLARBLARR</span><b>↗</b></a>
+            </div>
+            <a class="project-visual project-visual-class" href="https://xblarblarr.web.id" target="_blank" rel="noopener noreferrer" aria-label="Buka website XBLARBLARR"><div class="project-visual-glow"></div><div class="browser-frame"><div class="browser-top"><div class="browser-dots"><i></i><i></i><i></i></div><span>xblarblarr.web.id</span><b>↗</b></div><img src="assets/xblarblarr-dashboard.webp" alt="Tampilan dashboard website kelas XBLARBLARR" loading="lazy"><div class="visual-corner">CLASS<br>HUB / 01</div></div><span class="visual-caption">A CLASSROOM, CONNECTED.</span></a>
+          </div>
+          <div class="project-modules"><div class="modules-heading"><span>CLASS ECOSYSTEM / MODULES</span><small>RAGAM MENU DALAM SATU RUANG KELAS DIGITAL</small></div><div class="module-cloud"><span>Tugas</span><span>Notifikasi LMS</span><span>Kuis</span><span>Jadwal & Piket</span><span>Jurnal Pelajaran</span><span>Literasi</span><span>Absensi</span><span>Laporan Piket</span><span>Tempat Duduk</span><span>Materi</span><span>Uang Kas</span><span>Level Up</span><span>Guru</span><span>Diskusi</span><span>Menfess</span><span>Game</span><span>Galeri</span><span>Photobooth</span><span>Tim Kami</span><span>Spinner Kelompok</span><span>Laporan Admin</span><span>Pembaruan</span><span>Panel Admin</span></div></div>
+          <div class="project-bottomline"><span>BUILT TO MAKE CLASS ACTIVITIES MORE ORGANIZED</span><span>KLATEN / INDONESIA</span></div>
+        </article>
+
+        <article class="project-card project-satay reveal" id="sate-master">
+          <div class="project-topline"><span>PROJECT / 002</span><span>CREATIVE CODING · 3D GAME EXPERIMENT</span><span class="project-status project-status-play"><i></i> PLAYABLE EXPERIMENT</span></div>
+          <div class="satay-layout">
+            <div class="satay-visual"><div class="satay-scene"><div class="satay-moon"></div><div class="satay-city city-a"></div><div class="satay-city city-b"></div><div class="satay-cart"><div class="cart-roof"></div><div class="cart-window"></div><div class="cart-counter"></div><div class="cart-wheel wheel-a"></div><div class="cart-wheel wheel-b"></div><div class="cart-fire"></div></div><div class="satay-road"></div><span class="satay-label">NIGHT MARKET / 3D</span></div><div class="satay-visual-note">A SMALL EXPERIMENT<br>WITH A BIG APPETITE.</div></div>
+            <div class="satay-copy"><p class="project-category">A LITTLE GAME AFTER HOURS</p><h3>SATE MASTER<br><em>3D.</em></h3><p class="project-description">Eksperimen game simulasi penjual sate yang dibuat untuk mengeksplorasi bagaimana lingkungan 3D, mekanik permainan, dan interaksi pengguna dapat bekerja bersama di browser.</p><div class="satay-feature-grid"><div><span>01</span><b>3D Environment</b><small>Suasana gerobak di malam hari</small></div><div><span>02</span><b>Game Mechanics</b><small>Memasak, membalik, dan menyajikan sate</small></div><div><span>03</span><b>Management</b><small>Stok, saldo, pelanggan, dan upgrade</small></div><div><span>04</span><b>Interaction</b><small>Kontrol dan audio berbasis browser</small></div></div><div class="project-tags"><span>JavaScript</span><span>Three.js</span><span>Web Audio</span></div><a class="project-link project-link-light" href="projects/sate-master/index.html" target="_blank" rel="noopener noreferrer"><span>Mainkan eksperimen</span><b>↗</b></a></div>
+          </div>
+          <div class="project-bottomline"><span>MADE TO EXPLORE · NOT TO BE PERFECT</span><span>CREATIVE PLAYGROUND / 02</span></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- WORKING PRINCIPLES -->
+    <section class="principles-section paper-section section-pad contour-surface contour-light" id="principles">
+      <div class="section-shell">
+        <div class="section-heading reveal"><span class="section-index">07 / HOW I APPROACH A PROJECT</span><span class="section-aside">SMALL PRINCIPLES, EVERY BUILD</span></div>
+        <div class="principles-heading reveal"><h2>Fungsi yang jelas.<br><em>Pengalaman yang berkesan.</em></h2><p>Bagi saya, sebuah website yang baik tidak hanya terlihat menarik. Ia juga perlu punya tujuan, mudah dipahami, dan nyaman digunakan.</p></div>
+        <div class="principles-grid">
+          <article class="principle reveal"><span>01 / PURPOSE</span><div class="principle-icon">◎</div><h3>Mulai dari kebutuhan.</h3><p>Memahami tujuan dan siapa yang akan menggunakan karya tersebut sebelum mulai membangunnya.</p></article>
+          <article class="principle reveal delay-1"><span>02 / EXPERIENCE</span><div class="principle-icon">✳</div><h3>Perhatikan pengalaman.</h3><p>Mengusahakan tampilan yang jelas, alur yang masuk akal, serta interaksi yang membantu pengguna.</p></article>
+          <article class="principle reveal delay-2"><span>03 / ITERATION</span><div class="principle-icon">↻</div><h3>Berani memperbaiki.</h3><p>Menganggap revisi sebagai bagian dari proses. Hal yang belum tepat adalah kesempatan untuk belajar.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE IDEA LAB -->
+    <section class="lab-section section-pad contour-surface contour-color" id="lab">
+      <div class="section-shell">
+        <div class="section-heading reveal"><span class="section-index">08 / GEA MINI LAB</span><span class="section-aside">A LITTLE SPACE TO PLAY</span></div>
+        <div class="lab-heading reveal"><h2>Bagaimana jika<br>kita <em>mencoba?</em></h2><p>Ruang eksperimen kecil di dalam portofolio ini. Racik beberapa pilihan dan temukan satu gagasan digital untuk dijadikan pemantik.</p></div>
+        <div class="idea-lab reveal">
+          <div class="lab-controls">
+            <div class="lab-controls-top"><span>IDEA GENERATOR / 001</span><b>LIVE PLAYGROUND <i></i></b></div>
+            <label for="ideaType">JENIS PENGALAMAN</label><select id="ideaType"><option value="website">Website interaktif</option><option value="dashboard">Dashboard sederhana</option><option value="game">Game berbasis browser</option><option value="tool">Tools produktivitas</option></select>
+            <label for="ideaGoal">TUJUAN UTAMA</label><select id="ideaGoal"><option value="membantu siswa menyelesaikan aktivitas belajar">Membantu kegiatan belajar</option><option value="mengorganisasi informasi dalam satu tempat">Mengorganisasi informasi</option><option value="membuat proses sehari-hari lebih praktis">Membuat aktivitas lebih praktis</option><option value="memberikan pengalaman hiburan yang interaktif">Menciptakan hiburan interaktif</option></select>
+            <label for="ideaMood">NUANSA VISUAL</label><select id="ideaMood"><option value="editorial dan minimalis">Editorial minimalis</option><option value="cinematic dan atmosferik">Cinematic gelap</option><option value="ceria dengan warna pastel">Pastel ceria</option><option value="futuristik dengan detail interaktif">Futuristik interaktif</option></select>
+            <button class="button button-dark lab-generate" id="generateIdea"><span>Racik sebuah ide</span><b>✳</b></button>
+            <p class="lab-disclaimer">Hasil generator ini hanyalah pemantik ide, bukan daftar proyek yang sudah dibuat.</p>
+          </div>
+          <div class="lab-output"><div class="lab-output-head"><span>OUTPUT / <b id="ideaNumber">001</b></span><span>GENERATED THOUGHT</span></div><div class="output-mark">✳</div><p class="output-label">YOUR NEXT LITTLE EXPERIMENT</p><h3 id="ideaTitle">Ruang belajar<br><em>interaktif.</em></h3><p id="ideaDescription">Bangun sebuah website interaktif dengan nuansa editorial dan minimalis untuk membantu siswa menyelesaikan aktivitas belajar melalui navigasi yang intuitif.</p><div class="output-tags"><span id="ideaTagType">WEBSITE</span><span id="ideaTagMood">EDITORIAL</span><span>IDEA / LAB</span></div><button class="copy-idea" id="copyIdea"><span>Salin gagasan</span><b>⌘</b></button><span class="output-decoration">G.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-section paper-section section-pad contour-surface contour-light" id="faq">
+      <div class="section-shell">
+        <div class="section-heading reveal"><span class="section-index">09 / QUICK QUESTIONS</span><span class="section-aside">A FEW THINGS WORTH KNOWING</span></div>
+        <div class="faq-layout"><div class="faq-heading reveal"><h2>Masih ada<br>yang ingin<br><em>diketahui?</em></h2><p>Beberapa jawaban singkat tentang saya, proses belajar, dan proyek yang ada di portofolio ini.</p><a href="#contact" class="inline-link">Punya pertanyaan lain? <span>↗</span></a></div>
+          <div class="faq-list reveal delay-1">
+            <details open><summary><span>01</span><b>Siapa Gilbert Evan Arkananta?</b><i>+</i></summary><p>Saya pelajar di SMA Negeri 1 Klaten yang tertarik pada web development, creative coding, dan pemanfaatan teknologi untuk membangun karya digital.</p></details>
+            <details><summary><span>02</span><b>Apa yang membuat saya tertarik pada coding?</b><i>+</i></summary><p>Ketertarikan saya tumbuh melalui kegiatan ekstrakurikuler SECURE di divisi Production. Dari sana saya mulai menikmati proses membuat sesuatu dengan teknologi, terutama website.</p></details>
+            <details><summary><span>03</span><b>Apa proyek yang bisa dijelajahi di sini?</b><i>+</i></summary><p>Ada XBLARBLARR, website kelas yang saya kembangkan untuk membantu aktivitas siswa, serta Sate Master 3D, eksperimen game simulasi berbasis browser.</p></details>
+            <details><summary><span>04</span><b>Teknologi apa yang saya gunakan?</b><i>+</i></summary><p>Beberapa teknologi yang pernah saya gunakan atau eksplorasi antara lain HTML, CSS, JavaScript, Google Apps Script, Google Sheets, dan Three.js.</p></details>
+            <details><summary><span>05</span><b>Apakah saya masih belajar?</b><i>+</i></summary><p>Tentu. Portofolio ini adalah catatan perjalanan yang terus berkembang. Saya masih memperkuat fondasi, mencoba pendekatan baru, dan menyempurnakan karya yang sudah dibuat.</p></details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT / CLOSING -->
+    <section class="contact-section contour-surface contour-dark" id="contact">
+      <div class="contact-bg-orb"></div><div class="contact-grid"></div>
+      <div class="contact-shell">
+        <div class="contact-top reveal"><span>10 / LET'S CONNECT</span><span>THE NEXT CHAPTER STARTS HERE</span></div>
+        <div class="contact-main reveal"><p class="contact-eyebrow">THANK YOU FOR MAKING IT THIS FAR.</p><h2>Punya ide?<br>Mari <em>wujudkan.</em></h2><p class="contact-copy">Saya terbuka untuk bertukar ide, berbagi proses belajar, dan mengenal hal-hal baru di dunia digital. Sampai bertemu di perjalanan berikutnya.</p><a class="instagram-cta magnetic" href="https://www.instagram.com/gilbertevanarkananta/" target="_blank" rel="noopener noreferrer"><span class="instagram-icon">◎</span><span><small>FIND ME ON INSTAGRAM</small><strong>@gilbertevanarkananta</strong></span><b>↗</b></a></div>
+        <div class="contact-signature"><span class="signature-mark">G<span>.</span></span><div><strong>GILBERT EVAN ARKANANTA</strong><small>STUDENT · DIGITAL EXPLORER · SMA NEGERI 1 KLATEN</small></div><a href="#opening">BACK TO THE BEGINNING ↑</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer contour-surface contour-dark"><span>© 2026 GILBERT EVAN ARKANANTA</span><span>BUILT WITH CURIOSITY IN KLATEN, INDONESIA.</span><a href="#opening" aria-label="Kembali ke awal"><span class="footer-g">G</span><span class="footer-up" aria-hidden="true">↑</span></a></footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
